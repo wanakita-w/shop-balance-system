@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import prisma from "./db.js";
 
 // โหลดค่าจาก .env
 dotenv.config();
@@ -22,8 +23,25 @@ app.use(
 
 // === Routes ===
 // test route
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Server is running" });
+app.get("/api/health", async (req, res) => {
+  // ← เพิ่m async
+  try {
+    // ลองนับจำนวน User ใน database
+    const userCount = await prisma.user.count();
+
+    res.json({
+      status: "ok",
+      message: "Server is running",
+      database: "connected",
+      userCount: userCount,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Database connection failed",
+      error: error.message,
+    });
+  }
 });
 
 // === Start Server ===
