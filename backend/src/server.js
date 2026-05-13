@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import prisma from "./db.js";
+import authRoutes from "./routes/auth.routes.js";
 
 // โหลดค่าจาก .env
 dotenv.config();
@@ -42,6 +43,8 @@ app.get("/api/health", async (req, res) => {
     });
   }
 });
+
+app.use("/api/auth", authRoutes);
 
 // === Start Server ===
 app.listen(PORT, () => {
