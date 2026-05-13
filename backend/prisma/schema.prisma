@@ -1,13 +1,10 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ========================================
@@ -17,103 +14,89 @@ datasource db {
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
-  password  String   // จะเก็บแบบ hashed ด้วย bcrypt
+  password  String
   name      String
   role      Role     @default(MEMBER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relations
-  transactions  Transaction[]
+  transactions   Transaction[]
   stockMovements StockMovement[]
-  dailyReports  DailyReport[]
+  dailyReports   DailyReport[]
 
-  @@map("users") // ชื่อตารางจริงใน database
+  @@map("users")
 }
 
 enum Role {
-  ADMIN   // เจ้าของร้าน - ทำได้ทุกอย่าง + ปิดยอด
-  MEMBER  // พนักงาน - บันทึกรายการได้อย่างเดียว
+  ADMIN
+  MEMBER
 }
 
 // ========================================
-// SECTION 2: TRANSACTIONS (รายรับ-รายจ่าย)
+// SECTION 2: TRANSACTIONS
 // ========================================
 
 model Transaction {
   id        String          @id @default(cuid())
-  type      TransactionType // INCOME หรือ EXPENSE
-  amount    Float           // จำนวนเงิน (บาท)
-  method    PaymentMethod   // CASH หรือ TRANSFER
-  category  String?         // หมวดหมู่ เช่น "ซื้อของเข้า", "ค่าไฟ", "ขายสินค้า"
-  note      String?         // บันทึกเพิ่มเติม
-  
-  // Metadata
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Foreign Keys
+  type      TransactionType
+  amount    Float
+  method    PaymentMethod
+  category  String?
+  note      String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Optional: เชื่อมกับ DailyReport (สำหรับรายการที่ถูกปิดยอดแล้ว)
+
   dailyReportId String?
   dailyReport   DailyReport? @relation(fields: [dailyReportId], references: [id])
 
   @@map("transactions")
-  @@index([userId]) // ทำให้ query หา transaction ของ user นั้นๆ เร็วขึ้น
-  @@index([createdAt]) // ทำให้ query แบ่งตามวันเร็วขึ้น
+  @@index([userId])
+  @@index([createdAt])
 }
 
 enum TransactionType {
-  INCOME   // รายรับ (ขาย)
-  EXPENSE  // รายจ่าย (ซื้อของเข้า, ค่าใช้จ่ายอื่นๆ)
+  INCOME
+  EXPENSE
 }
 
 enum PaymentMethod {
-  CASH      // เงินสด (เข้าลิ้นชัก)
-  TRANSFER  // โอนเงิน (เข้าบัญชีธนาคาร)
+  CASH
+  TRANSFER
 }
 
 // ========================================
-// SECTION 3: PRODUCTS & STOCK (สินค้าและสต็อก)
+// SECTION 3: PRODUCTS & STOCK
 // ========================================
 
 model Product {
-  id          String   @id @default(cuid())
-  name        String   // ชื่อสินค้า เช่น "น้ำดื่ม singha 600ml"
-  description String?  // รายละเอียดเพิ่มเติม
-  unit        String   @default("ชิ้น") // หน่วย เช่น "ชิ้น", "แพ็ค", "ลัง"
-  
-  // Stock info
-  currentStock Int      @default(0) // จำนวนคงเหลือปัจจุบัน
-  minStock     Int      @default(0) // แจ้งเตือนเมื่อเหลือต่ำกว่านี้
-  
-  // Metadata
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  // Relations
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  unit         String   @default("ชิ้น")
+  currentStock Int      @default(0)
+  minStock     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   stockMovements StockMovement[]
 
   @@map("products")
 }
 
 model StockMovement {
-  id        String           @id @default(cuid())
-  type      StockMovementType
-  quantity  Int              // จำนวนที่เพิ่m/ลด (บวก = เพิ่ม, ลบ = ลด)
-  note      String?          // บันทึก เช่น "ซื้อเข้า 2 ลัง", "ขายไป 5 ชิ้น"
-  
-  // ราคาต่อหน่วย (optional) — เก็บไว้ดูประวัติว่าซื้อมาราคาเท่าไหร่
+  id           String            @id @default(cuid())
+  type         StockMovementType
+  quantity     Int
+  note         String?
   pricePerUnit Float?
-  
-  createdAt DateTime @default(now())
-  
-  // Foreign Keys
+  createdAt    DateTime          @default(now())
+
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -123,51 +106,40 @@ model StockMovement {
 }
 
 enum StockMovementType {
-  IN   // เพิ่มสต็อก (ซื้อของเข้า)
-  OUT  // ลดสต็อก (ขายออก, เสียหาย)
-  ADJUST // ปรับสต็อก (นับใหม่แล้วไม่ตรง)
+  IN
+  OUT
+  ADJUST
 }
 
 // ========================================
-// SECTION 4: DAILY REPORTS (รายงานปิดยอดประจำวัน)
+// SECTION 4: DAILY REPORTS
 // ========================================
 
 model DailyReport {
   id          String   @id @default(cuid())
-  date        DateTime // วันที่ปิดยอด
+  date        DateTime
   
-  // สรุปยอดเงิน
-  totalIncome     Float // รายรับรวม
-  totalExpense    Float // รายจ่ายรวม
-  netProfit       Float // กำไรสุทธิ (income - expense)
+  totalIncome     Float
+  totalExpense    Float
+  netProfit       Float
   
-  // แยกตามช่องทางชำระเงิน
-  cashIncome      Float // รายรับเงินสด
-  transferIncome  Float // รายรับโอน
-  cashExpense     Float // รายจ่ายเงินสด
-  transferExpense Float // รายจ่ายโอน
+  cashIncome      Float
+  transferIncome  Float
+  cashExpense     Float
+  transferExpense Float
   
-  // Expected Cash = เงินสดต้นวัน + cashIncome - cashExpense
-  expectedCash Float
-  
-  // Actual Cash = เงินสดจริงที่นับได้ (กรอกตอนปิดยอด)
-  actualCash   Float?
-  
-  // ส่วนต่าง (actual - expected)
+  expectedCash   Float
+  actualCash     Float?
   cashDifference Float? @default(0)
   
-  // บันทึกเพิ่มเติม
   note String?
   
-  // Metadata
   createdAt DateTime @default(now())
-  closedAt  DateTime @default(now()) // เวลาที่กดปิดยอด
-  
-  // Foreign Keys
+  closedAt  DateTime @default(now())
+
   closedByUserId String
   closedByUser   User   @relation(fields: [closedByUserId], references: [id])
-  
-  // Relations - transactions ที่อยู่ในรายงานนี้
+
   transactions Transaction[]
 
   @@map("daily_reports")

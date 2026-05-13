@@ -22,9 +22,8 @@ app.use(
 );
 
 // === Routes ===
-// test route
+// Test route - เช็คสถานะ server และ database
 app.get("/api/health", async (req, res) => {
-  // ← เพิ่m async
   try {
     // ลองนับจำนวน User ใน database
     const userCount = await prisma.user.count();
