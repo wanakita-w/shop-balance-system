@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
-import Button from "./components/ui/Button";
+import ProfilePage from "./pages/ProfilePage";
+import Header from "./components/Header";
+import BottomNav from "./components/BottomNav";
 
 function App() {
-  const { user, loading, logout } = useAuth(); // ดึง user, loading, logout จาก context ได้ user or null, loading เป็น boolean, logout เป็นฟังก์ชัน
+  const { user, loading } = useAuth();
+  const [currentPage, setCurrentPage] = useState("home");
 
-  // กำลังโหลด แสดงหน้าจอ loading
+  // Loading
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
@@ -17,45 +21,47 @@ function App() {
     );
   }
 
-  // ได้ user เป็น null คือยังไม่ login แสดงหน้า LoginPage
+  // Not logged in
   if (!user) {
     return <LoginPage />;
   }
 
-  // Login แล้ว
+  // Logged in
   return (
-    <div className="min-h-screen bg-background-light dark:bg-background-dark p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                Welcome, {user.name}! 👋
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                Role: <span className="font-medium">{user.role}</span>
+    <div className="min-h-screen bg-background-light dark:bg-background-dark pb-16 md:pb-0">
+      <Header onProfileClick={() => setCurrentPage("profile")} />
+
+      <main className="max-w-7xl mx-auto px-4 py-6">
+        {currentPage === "home" && (
+          <>
+            {/* Dashboard */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Dashboard
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400">
+                Welcome back, {user.name}! 👋
               </p>
             </div>
 
-            <Button
-              variant="danger"
-              onClick={logout} // เรียก logout ตรงๆ
-            >
-              Logout
-            </Button>
-          </div>
-        </div>
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* ... (cards เดิม) */}
+            </div>
 
-        {/* Placeholder for Dashboard */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Dashboard
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">Coming soon... 🚀</p>
-        </div>
-      </div>
+            {/* Coming Soon */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-8 text-center border border-gray-200 dark:border-gray-700">
+              <p className="text-gray-500 dark:text-gray-400 text-lg">
+                More features coming soon... 🚀
+              </p>
+            </div>
+          </>
+        )}
+
+        {currentPage === "profile" && <ProfilePage />}
+      </main>
+
+      <BottomNav active={currentPage} onChange={setCurrentPage} />
     </div>
   );
 }
