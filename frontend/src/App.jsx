@@ -3,9 +3,9 @@ import LoginPage from "./pages/LoginPage";
 import Button from "./components/ui/Button";
 
 function App() {
-  const { user, loading, logout } = useAuth(); // ✅ เรียกที่ top level
+  const { user, loading, logout } = useAuth(); // ดึง user, loading, logout จาก context ได้ user or null, loading เป็น boolean, logout เป็นฟังก์ชัน
 
-  // กำลังโหลด
+  // กำลังโหลด แสดงหน้าจอ loading
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background-light dark:bg-background-dark">
@@ -17,7 +17,7 @@ function App() {
     );
   }
 
-  // ยังไม่ login
+  // ได้ user เป็น null คือยังไม่ login แสดงหน้า LoginPage
   if (!user) {
     return <LoginPage />;
   }
@@ -41,7 +41,7 @@ function App() {
 
             <Button
               variant="danger"
-              onClick={logout} // ✅ เรียก logout ตรงๆ
+              onClick={logout} // เรียก logout ตรงๆ
             >
               Logout
             </Button>
