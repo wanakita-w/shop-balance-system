@@ -16,6 +16,13 @@ export const ERROR_MESSAGES = {
   INVALID_EMAIL: "รูปแบบ email ไม่ถูกต้อง",
   PASSWORD_TOO_SHORT: "Password ต้องมีอย่างน้อย 6 ตัวอักษร",
 
+  // Transaction errors
+  TRANSACTION_NOT_FOUND: "ไม่พบรายการที่ต้องการ",
+  TRANSACTION_FORBIDDEN: "คุณไม่มีสิทธิ์จัดการรายการนี้",
+  INVALID_AMOUNT: "จำนวนเงินต้องมากกว่า 0",
+  INVALID_TRANSACTION_TYPE: "ประเภทรายการไม่ถูกต้อง (ต้องเป็น INCOME หรือ EXPENSE)",
+  INVALID_PAYMENT_METHOD: "วิธีชำระเงินไม่ถูกต้อง (ต้องเป็น CASH หรือ TRANSFER)",
+
   // General errors
   INTERNAL_ERROR: "เกิดข้อผิดพลาดในระบบ",
   NOT_FOUND: "ไม่พบข้อมูลที่ต้องการ",
