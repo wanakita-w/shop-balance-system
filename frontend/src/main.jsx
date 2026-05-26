@@ -4,12 +4,15 @@ import App from "./App.jsx";
 import "./index.css";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import { TransactionProvider } from "./context/TransactionContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ThemeProvider>
       <AuthProvider>
-        <App />
+        <TransactionProvider>
+          <App />
+        </TransactionProvider>
       </AuthProvider>
     </ThemeProvider>
   </StrictMode>,

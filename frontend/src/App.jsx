@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "./context/AuthContext";
 import LoginPage from "./pages/LoginPage";
 import ProfilePage from "./pages/ProfilePage";
+import TransactionPage from "./pages/TransactionPage";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
 
@@ -29,7 +30,7 @@ function App() {
   // Logged in
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark pb-16 md:pb-0">
-      <Header onProfileClick={() => setCurrentPage("profile")} />
+      <Header currentPage={currentPage} onNavigate={setCurrentPage} />
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {currentPage === "home" && (
@@ -58,6 +59,7 @@ function App() {
           </>
         )}
 
+        {currentPage === "transactions" && <TransactionPage />}
         {currentPage === "profile" && <ProfilePage />}
       </main>
 
