@@ -57,12 +57,28 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Update profile (name)
+  const updateProfile = async (data) => {
+    const result = await authService.updateProfile(data);
+    if (result.success) {
+      setUser(result.data.user);
+    }
+    return result;
+  };
+
+  // Change password
+  const changePassword = async (data) => {
+    return await authService.changePassword(data);
+  };
+
   const value = {
     user,
     loading,
     login,
     register,
     logout,
+    updateProfile,
+    changePassword,
     isAuthenticated: !!user,
   };
 

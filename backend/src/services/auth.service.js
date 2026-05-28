@@ -133,6 +133,33 @@ export const getUserById = async (userId) => {
 };
 
 /**
+ * เปลี่ยน Password
+ * @param {string} userId
+ * @param {object} param1 - { currentPassword, newPassword }
+ */
+export const changePassword = async (userId, { currentPassword, newPassword }) => {
+  const { isValid } = validateRequiredFields(
+    { currentPassword, newPassword },
+    ["currentPassword", "newPassword"],
+  );
+  if (!isValid) throw createError("REQUIRED_FIELDS");
+
+  const user = await userRepo.findUserById(userId);
+  if (!user) throw createError("NOT_FOUND");
+
+  const isMatch = await comparePassword(currentPassword, user.password);
+  if (!isMatch) throw createError("WRONG_PASSWORD");
+
+  if (!isValidPassword(newPassword)) throw createError("PASSWORD_TOO_SHORT");
+
+  const isSame = await comparePassword(newPassword, user.password);
+  if (isSame) throw createError("SAME_PASSWORD");
+
+  const hashed = await hashPassword(newPassword);
+  await userRepo.updateUser(userId, { password: hashed });
+};
+
+/**
  * อัปเดตข้อมูล User
  * @param {string} userId
  * @param {object} updateData - { name?, role? }

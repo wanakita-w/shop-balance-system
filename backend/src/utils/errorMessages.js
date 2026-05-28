@@ -15,6 +15,8 @@ export const ERROR_MESSAGES = {
   REQUIRED_FIELDS: "กรุณากรอกข้อมูลให้ครบถ้วน",
   INVALID_EMAIL: "รูปแบบ email ไม่ถูกต้อง",
   PASSWORD_TOO_SHORT: "Password ต้องมีอย่างน้อย 6 ตัวอักษร",
+  WRONG_PASSWORD: "รหัสผ่านปัจจุบันไม่ถูกต้อง",
+  SAME_PASSWORD: "รหัสผ่านใหม่ต้องไม่เหมือนเดิม",
 
   // Transaction errors
   TRANSACTION_NOT_FOUND: "ไม่พบรายการที่ต้องการ",

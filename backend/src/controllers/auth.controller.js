@@ -1,6 +1,7 @@
 import * as authService from "../services/auth.service.js";
 import { ERROR_MESSAGES } from "../utils/errorMessages.js";
 
+
 /**
  * Register — สมัครสมาชิก
  * POST /api/auth/register
@@ -111,6 +112,23 @@ export const updateProfile = async (req, res) => {
 };
 
 /**
+ * Change Password
+ * PUT /api/auth/password
+ * Body: { currentPassword, newPassword }
+ * Headers: Authorization: Bearer <token>
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(userId, { currentPassword, newPassword });
+    res.json({ success: true, message: "เปลี่ยนรหัสผ่านสำเร็จ" });
+  } catch (error) {
+    handleAuthError(res, error);
+  }
+};
+
+/**
  * Error Handler สำหรับ Auth
  * แปลง Error จาก Service → HTTP Response
  */
@@ -147,6 +165,18 @@ const handleAuthError = (res, error) => {
       return res.status(400).json({
         success: false,
         message: ERROR_MESSAGES.PASSWORD_TOO_SHORT,
+      });
+
+    case "WRONG_PASSWORD":
+      return res.status(400).json({
+        success: false,
+        message: ERROR_MESSAGES.WRONG_PASSWORD,
+      });
+
+    case "SAME_PASSWORD":
+      return res.status(400).json({
+        success: false,
+        message: ERROR_MESSAGES.SAME_PASSWORD,
       });
 
     case "NOT_FOUND":

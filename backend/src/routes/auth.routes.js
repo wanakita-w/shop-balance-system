@@ -4,6 +4,7 @@ import {
   login,
   getProfile,
   updateProfile,
+  changePassword,
 } from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middlewares/authMiddleware.js";
 
@@ -38,5 +39,12 @@ router.get("/me", authMiddleware, getProfile);
  * @note    ยังไม่ได้ใส่ middleware — จะเพิ่มในบทถัดไป
  */
 router.put("/profile", authMiddleware, updateProfile);
+
+/**
+ * @route   PUT /api/auth/password
+ * @desc    เปลี่ยนรหัสผ่าน
+ * @access  Private (ต้อง login)
+ */
+router.put("/password", authMiddleware, changePassword);
 
 export default router;

@@ -32,11 +32,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // ถ้า token หมดอายุ → ลบ token + redirect to login
-    if (error.response?.status === 401) {
+    // auto-logout เฉพาะ authenticated routes เท่านั้น ไม่ใช่ตอน login ผิด
+    const url = error.config?.url || "";
+    const isAuthEndpoint = url.includes("/auth/login") || url.includes("/auth/register");
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      window.location.href = "/login";
+      window.location.reload();
     }
 
     return Promise.reject(error);
