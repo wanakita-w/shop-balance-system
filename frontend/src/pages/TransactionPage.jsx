@@ -1,13 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTransactions } from "../context/TransactionContext";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../context/AuthContext"; //  ข้อมูล user ที่ login อยู่ (ใช้เช็คสิทธิ์ edit/delete)
 
 const fmt = (n) =>
   new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(n);
 
 const fmtTime = (dateStr) => {
   const d = new Date(dateStr);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  return d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 };
 
 const getDateLabel = (dateStr) => {
@@ -51,14 +55,34 @@ const SkeletonRow = () => (
 );
 
 const IconEdit = () => (
-  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z" />
+  <svg
+    className="w-3.5 h-3.5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-2a2 2 0 01.586-1.414z"
+    />
   </svg>
 );
 
 const IconTrash = () => (
-  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+  <svg
+    className="w-3.5 h-3.5"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+    />
   </svg>
 );
 
@@ -72,20 +96,23 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
     fetchTransactions,
     setFilters,
     removeTransaction,
-  } = useTransactions();
-  const { user } = useAuth();
+  } = useTransactions(); // ดึงข้อมูลและฟังก์ชันที่จำเป็นจาก context
+  const { user } = useAuth(); // ดึงข้อมูล user ที่ login อยู่ (ใช้เช็คสิทธิ์ edit/delete)
 
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null); // เก็บ id ของ transaction ที่กำลังถูกลบ เพื่อแสดง loading state บนปุ่ม delete
 
   useEffect(() => {
     fetchTransactions(1);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // [] หมายความว่า fetchTransactions จะถูกเรียกแค่ตอนโหลดครั้งแรกเท่านั้น
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this transaction?")) return;
     setDeletingId(id);
-    try { await removeTransaction(id); }
-    finally { setDeletingId(null); }
+    try {
+      await removeTransaction(id);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const canEdit = (tx) => user?.role === "ADMIN" || tx.userId === user?.id;
@@ -102,7 +129,6 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
 
   return (
     <div>
-
       {/* Page header */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-3">
@@ -110,13 +136,27 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
             onClick={onBack}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white active:scale-95 transition-all shadow-sm"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15 19l-7-7 7-7"
+              />
             </svg>
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Transactions</h1>
-            <p className="text-xs text-gray-400 mt-0.5">{pagination.total} records total</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">
+              Transactions
+            </h1>
+            <p className="text-xs text-gray-400 mt-0.5">
+              {pagination.total} records total
+            </p>
           </div>
         </div>
         {/* Desktop add button — FAB covers mobile */}
@@ -124,8 +164,18 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
           onClick={onAdd}
           className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.5}
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4v16m8-8H4"
+            />
           </svg>
           Add Transaction
         </button>
@@ -138,9 +188,11 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
           {TYPE_FILTERS.map(({ label, value }) => {
             const isActive = filters.type === value;
             const activeColor =
-              value === "INCOME" ? "bg-green-500 text-white border-green-500"
-              : value === "EXPENSE" ? "bg-red-500 text-white border-red-500"
-              : "bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white";
+              value === "INCOME"
+                ? "bg-green-500 text-white border-green-500"
+                : value === "EXPENSE"
+                  ? "bg-red-500 text-white border-red-500"
+                  : "bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white";
             return (
               <button
                 key={value}
@@ -181,25 +233,51 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
       {/* List */}
       {loading ? (
         <div className="space-y-2">
-          {[1, 2, 3, 4].map((i) => <SkeletonRow key={i} />)}
+          {[1, 2, 3, 4].map((i) => (
+            <SkeletonRow key={i} />
+          ))}
         </div>
       ) : error ? (
         <div className="text-center py-16 text-red-500 text-sm">{error}</div>
       ) : transactions.length === 0 ? (
         <div className="text-center py-20">
           <div className="w-16 h-16 bg-gray-100 dark:bg-gray-800 rounded-3xl flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+            <svg
+              className="w-8 h-8 text-gray-300 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.5}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"
+              />
             </svg>
           </div>
-          <p className="font-semibold text-gray-600 dark:text-gray-300">No transactions yet</p>
-          <p className="text-sm text-gray-400 mt-1 mb-4">Start by adding your first record</p>
+          <p className="font-semibold text-gray-600 dark:text-gray-300">
+            No transactions yet
+          </p>
+          <p className="text-sm text-gray-400 mt-1 mb-4">
+            Start by adding your first record
+          </p>
           <button
             onClick={onAdd}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl active:scale-95 transition-all"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4v16m8-8H4"
+              />
             </svg>
             Add Transaction
           </button>
@@ -221,33 +299,43 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
                     className="group flex items-stretch bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200 overflow-hidden"
                   >
                     {/* Color bar */}
-                    <div className={`w-1 flex-shrink-0 ${tx.type === "INCOME" ? "bg-green-500" : "bg-red-500"}`} />
+                    <div
+                      className={`w-1 flex-shrink-0 ${tx.type === "INCOME" ? "bg-green-500" : "bg-red-500"}`}
+                    />
 
                     {/* Content */}
                     <div className="flex-1 flex items-center gap-3 px-4 py-3.5 min-w-0">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                          {tx.category || (tx.type === "INCOME" ? "Income" : "Expense")}
+                          {tx.category ||
+                            (tx.type === "INCOME" ? "Income" : "Expense")}
                         </p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
-                            tx.type === "INCOME"
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                          }`}>
+                          <span
+                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${
+                              tx.type === "INCOME"
+                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                : "bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400"
+                            }`}
+                          >
                             {tx.type === "INCOME" ? "Income" : "Expense"}
                           </span>
                           <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium">
-                            {tx.method === "CASH" ? "Cash" : "Transfer"} · {fmtTime(tx.createdAt)}
+                            {tx.method === "CASH" ? "Cash" : "Transfer"} ·{" "}
+                            {fmtTime(tx.createdAt)}
                           </span>
                         </div>
                       </div>
 
                       {/* Amount + actions */}
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <span className={`text-sm font-bold tabular-nums ${
-                          tx.type === "INCOME" ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
-                        }`}>
+                        <span
+                          className={`text-sm font-bold tabular-nums ${
+                            tx.type === "INCOME"
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-red-500 dark:text-red-400"
+                          }`}
+                        >
                           {tx.type === "INCOME" ? "+" : "−"}฿{fmt(tx.amount)}
                         </span>
 
@@ -266,10 +354,11 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
                               className="p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-40"
                               title="Delete"
                             >
-                              {deletingId === tx.id
-                                ? <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
-                                : <IconTrash />
-                              }
+                              {deletingId === tx.id ? (
+                                <div className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <IconTrash />
+                              )}
                             </button>
                           </div>
                         )}
@@ -305,7 +394,6 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
           </button>
         </div>
       )}
-
     </div>
   );
 }

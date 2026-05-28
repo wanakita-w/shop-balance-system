@@ -19,7 +19,7 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
   const isEditing = transaction !== null;
 
   const [formData, setFormData] = useState({
-    type: transaction?.type || "INCOME",
+    type: transaction?.type || "EXPENSE",
     amount: transaction?.amount || "",
     method: transaction?.method || "CASH",
     category: transaction?.category || "",
