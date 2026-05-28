@@ -200,6 +200,7 @@ export default function ProfilePage() {
               placeholder="Current password"
               value={pwForm.current}
               onChange={(e) => { setPwForm((p) => ({ ...p, current: e.target.value })); setPwError(""); }}
+              autoComplete="current-password"
               autoFocus
               className={inputCls}
             />
@@ -208,6 +209,7 @@ export default function ProfilePage() {
               placeholder="New password"
               value={pwForm.next}
               onChange={(e) => { setPwForm((p) => ({ ...p, next: e.target.value })); setPwError(""); }}
+              autoComplete="new-password"
               className={inputCls}
             />
             <input
@@ -215,6 +217,7 @@ export default function ProfilePage() {
               placeholder="Confirm new password"
               value={pwForm.confirm}
               onChange={(e) => { setPwForm((p) => ({ ...p, confirm: e.target.value })); setPwError(""); }}
+              autoComplete="new-password"
               className={inputCls}
             />
             {pwError && <p className="text-xs text-red-500 pt-1">{pwError}</p>}

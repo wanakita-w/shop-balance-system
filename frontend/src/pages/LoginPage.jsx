@@ -180,6 +180,7 @@ export default function LoginPage() {
             value={formData.password}
             onChange={handleChange}
             error={errors.password}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
             required
           />
 
