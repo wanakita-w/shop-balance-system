@@ -7,6 +7,7 @@ import HomePage from "./pages/HomePage";
 import ProfilePage from "./pages/ProfilePage";
 import TransactionPage from "./pages/TransactionPage";
 import TransactionForm from "./components/TransactionForm";
+import AdminPage from "./pages/AdminPage";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
 
@@ -68,13 +69,16 @@ function App() {
           />
         )}
 
+        {/* ── ADMIN ── */}
+        {currentPage === "admin" && <AdminPage />}
+
         {/* ── PROFILE ── */}
-        {currentPage === "profile" && <ProfilePage />}
+        {currentPage === "profile" && <ProfilePage onNavigate={setCurrentPage} />}
       </main>
       <BottomNav
-        active={currentPage} // ปุ่มไหน active (highlighted) ตาม currentPage
-        onChange={setCurrentPage} // ฟังก์ชันเปลี่ยนหน้าเมื่อกดปุ่มใน BottomNav จะส่งชื่อหน้าที่ต้องการไปให้ setCurrentPage
-        onAdd={handleOpenAdd} // กดปุ่ม add ใน BottomNav จะเปิดฟอร์มเพิ่มรายการใหม่
+        active={currentPage}
+        onChange={setCurrentPage}
+        onAdd={handleOpenAdd}
       />
       {showAddForm && (
         <TransactionForm

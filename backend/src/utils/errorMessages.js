@@ -18,6 +18,10 @@ export const ERROR_MESSAGES = {
   WRONG_PASSWORD: "รหัสผ่านปัจจุบันไม่ถูกต้อง",
   SAME_PASSWORD: "รหัสผ่านใหม่ต้องไม่เหมือนเดิม",
 
+  // User management errors
+  INVALID_ROLE: "Role ไม่ถูกต้อง (ต้องเป็น ADMIN หรือ MEMBER)",
+  CANNOT_CHANGE_OWN_ROLE: "ไม่สามารถเปลี่ยน Role ของตัวเองได้",
+
   // Transaction errors
   TRANSACTION_NOT_FOUND: "ไม่พบรายการที่ต้องการ",
   TRANSACTION_FORBIDDEN: "คุณไม่มีสิทธิ์จัดการรายการนี้",
