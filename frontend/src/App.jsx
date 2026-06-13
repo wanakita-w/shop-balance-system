@@ -51,35 +51,35 @@ function App() {
 
   // Layout หลักของแอป เมื่อ user เข้าสู่ระบบแล้ว
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-6">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
 
-      <main className="max-w-xl mx-auto px-4 pt-5">
-        {/* ── HOME ── */}
-        {currentPage === "home" && (
-          <HomePage onAdd={handleOpenAdd} onNavigate={setCurrentPage} /> // เรียก HomePage แล้วส่ง props 2 อย่างลงไปให้
-        )}
+      <main className="flex-1 overflow-y-auto">
+        <div className="max-w-xl mx-auto px-4 pt-5 pb-6">
+          {/* ── HOME ── */}
+          {currentPage === "home" && (
+            <HomePage onAdd={handleOpenAdd} onNavigate={setCurrentPage} />
+          )}
 
-        {/* ── TRANSACTIONS ── */}
-        {currentPage === "transactions" && (
-          <TransactionPage
-            onAdd={handleOpenAdd}
-            onEdit={handleOpenEdit}
-            onBack={() => setCurrentPage("home")}
-          />
-        )}
+          {/* ── TRANSACTIONS ── */}
+          {currentPage === "transactions" && (
+            <TransactionPage
+              onAdd={handleOpenAdd}
+              onEdit={handleOpenEdit}
+              onBack={() => setCurrentPage("home")}
+            />
+          )}
 
-        {/* ── ADMIN ── */}
-        {currentPage === "admin" && <AdminPage />}
+          {/* ── ADMIN ── */}
+          {currentPage === "admin" && <AdminPage />}
 
-        {/* ── PROFILE ── */}
-        {currentPage === "profile" && <ProfilePage onNavigate={setCurrentPage} />}
+          {/* ── PROFILE ── */}
+          {currentPage === "profile" && <ProfilePage onNavigate={setCurrentPage} />}
+        </div>
       </main>
-      <BottomNav
-        active={currentPage}
-        onChange={setCurrentPage}
-        onAdd={handleOpenAdd}
-      />
+
+      <BottomNav active={currentPage} onChange={setCurrentPage} />
+
       {showAddForm && (
         <TransactionForm
           isOpen={showAddForm}

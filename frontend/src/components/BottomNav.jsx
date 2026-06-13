@@ -7,9 +7,14 @@ const NavIcon = ({ id, active }) => {
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
       </svg>
     ),
-    admin: (
+    transactions: (
       <svg className={`w-5 h-5 ${color}`} fill="none" stroke="currentColor" strokeWidth={sw} viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+    products: (
+      <svg className={`w-5 h-5 ${color}`} fill="none" stroke="currentColor" strokeWidth={sw} viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
       </svg>
     ),
     profile: (
@@ -21,45 +26,28 @@ const NavIcon = ({ id, active }) => {
   return icons[id] || null;
 };
 
-export default function BottomNav({ active, onChange, onAdd }) {
+export default function BottomNav({ active, onChange }) {
+  const items = [
+    { id: "home", label: "Home" },
+    { id: "transactions", label: "Transactions" },
+    { id: "profile", label: "Profile" },
+  ];
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:hidden z-50">
-      <div className="flex items-center h-16 max-w-xl mx-auto px-6">
-
-        {/* Home */}
-        <button
-          onClick={() => onChange("home")}
-          className={`flex-1 flex flex-col items-center gap-1 transition-colors ${
-            active === "home" ? "text-primary" : "text-gray-400 dark:text-gray-500"
-          }`}
-        >
-          <NavIcon id="home" active={active === "home"} />
-          <span className="text-[10px] font-semibold">Home</span>
-        </button>
-
-        {/* Center FAB */}
-        <div className="flex-1 flex justify-center">
+    <nav className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:hidden flex-shrink-0">
+      <div className="flex items-center h-16 max-w-xl mx-auto px-2">
+        {items.map((item) => (
           <button
-            onClick={onAdd}
-            className="w-[52px] h-[52px] bg-primary rounded-2xl flex items-center justify-center shadow-lg shadow-primary/25 active:scale-95 transition-all duration-150"
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className={`flex-1 flex flex-col items-center gap-1 transition-colors ${
+              active === item.id ? "text-primary" : "text-gray-400 dark:text-gray-500"
+            }`}
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
+            <NavIcon id={item.id} active={active === item.id} />
+            <span className="text-[10px] font-semibold">{item.label}</span>
           </button>
-        </div>
-
-        {/* Profile */}
-        <button
-          onClick={() => onChange("profile")}
-          className={`flex-1 flex flex-col items-center gap-1 transition-colors ${
-            active === "profile" ? "text-primary" : "text-gray-400 dark:text-gray-500"
-          }`}
-        >
-          <NavIcon id="profile" active={active === "profile"} />
-          <span className="text-[10px] font-semibold">Profile</span>
-        </button>
-
+        ))}
       </div>
     </nav>
   );
