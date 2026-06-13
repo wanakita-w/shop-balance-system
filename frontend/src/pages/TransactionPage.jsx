@@ -31,17 +31,6 @@ const getDateLabel = (dateStr) => {
   });
 };
 
-const TYPE_FILTERS = [
-  { label: "All", value: "" },
-  { label: "Income", value: "INCOME" },
-  { label: "Expense", value: "EXPENSE" },
-];
-
-const METHOD_FILTERS = [
-  { label: "All", value: "" },
-  { label: "Cash", value: "CASH" },
-  { label: "Transfer", value: "TRANSFER" },
-];
 
 const SkeletonRow = () => (
   <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-2xl px-4 py-3.5 border border-gray-100 dark:border-gray-700/50 animate-pulse">
@@ -180,53 +169,26 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
         </button>
       </div>
 
-      {/* Filter pills */}
-      <div className="space-y-2 mb-5">
-        {/* Type */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {TYPE_FILTERS.map(({ label, value }) => {
-            const isActive = filters.type === value;
-            const activeColor =
-              value === "INCOME"
-                ? "bg-green-500 text-white border-green-500"
-                : value === "EXPENSE"
-                  ? "bg-red-500 text-white border-red-500"
-                  : "bg-gray-900 dark:bg-white text-white dark:text-gray-900 border-gray-900 dark:border-white";
-            return (
-              <button
-                key={value}
-                onClick={() => setFilters({ type: value })}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-semibold border transition-all duration-150 active:scale-95 ${
-                  isActive
-                    ? activeColor
-                    : "bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-700"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Method */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar">
-          {METHOD_FILTERS.map(({ label, value }) => {
-            const isActive = filters.method === value;
-            return (
-              <button
-                key={value}
-                onClick={() => setFilters({ method: value })}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold border transition-all duration-150 active:scale-95 ${
-                  isActive
-                    ? "bg-primary text-white border-primary"
-                    : "bg-white dark:bg-gray-800 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-700"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
+      {/* Filters */}
+      <div className="flex gap-2 mb-5">
+        <select
+          value={filters.type}
+          onChange={(e) => setFilters({ type: e.target.value })}
+          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+        >
+          <option value="">All Types</option>
+          <option value="INCOME">Income</option>
+          <option value="EXPENSE">Expense</option>
+        </select>
+        <select
+          value={filters.method}
+          onChange={(e) => setFilters({ method: e.target.value })}
+          className="flex-1 px-3 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+        >
+          <option value="">All Methods</option>
+          <option value="CASH">Cash</option>
+          <option value="TRANSFER">Transfer</option>
+        </select>
       </div>
 
       {/* List */}
