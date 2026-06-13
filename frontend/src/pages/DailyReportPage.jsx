@@ -204,6 +204,7 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
   };
 
   const init = getInitialValues();
+
   const [start, setStart] = useState(init.start);
   const [end, setEnd] = useState(init.end);
   const [result, setResult] = useState(null);

@@ -39,7 +39,7 @@ const getPeriodRange = (period) => {
 const EMPTY_STATS = { totalIncome: 0, totalExpense: 0, netProfit: 0, cashIncome: 0, transferIncome: 0, cashExpense: 0, transferExpense: 0 };
 
 export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
-  const { transactions, loading: txLoading } = useTransactions();
+  const { transactions, loading: txLoading, lastModified } = useTransactions();
   const [period, setPeriod] = useState("today");
   const [stats, setStats] = useState(EMPTY_STATS);
   const [statsLoading, setStatsLoading] = useState(false);
@@ -48,8 +48,7 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
     const fetchStats = async () => {
       setStatsLoading(true);
       try {
-        const range = getPeriodRange(period);
-        const res = await getSummary(range);
+        const res = await getSummary(getPeriodRange(period));
         setStats(res.data.data);
       } catch {
         setStats(EMPTY_STATS);
@@ -58,7 +57,7 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
       }
     };
     fetchStats();
-  }, [period]);
+  }, [period, lastModified]);
 
   const net = stats.netProfit;
 
@@ -67,7 +66,7 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
       {/* Hero balance card */}
       <div className="rounded-3xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 p-6 text-white shadow-xl shadow-blue-500/20">
         {/* Period filter */}
-        <div className="flex gap-1.5 mb-4">
+        <div className="flex flex-wrap gap-1.5 mb-3">
           {PERIODS.map((p) => (
             <button
               key={p.value}
@@ -80,6 +79,8 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
             </button>
           ))}
         </div>
+
+        <div className="mb-1" />
 
         <p className="text-sm text-blue-200 mb-1">Net Balance</p>
         <h2 className={`text-5xl font-bold tracking-tight mb-5 ${net < 0 ? "text-red-300" : "text-green-300"}`}>
@@ -173,7 +174,7 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
         ) : transactions.length === 0 ? (
           <div className="text-center py-10 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/50">
             <p className="text-gray-400 text-sm mb-2">No transactions yet</p>
-            <button onClick={onAdd} className="text-primary text-sm font-semibold">
+            <button onClick={() => onAdd()} className="text-primary text-sm font-semibold">
               Add your first one →
             </button>
           </div>

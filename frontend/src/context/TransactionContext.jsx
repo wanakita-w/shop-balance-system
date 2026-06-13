@@ -16,6 +16,7 @@ export const TransactionProvider = ({ children }) => {
   const [filters, setFiltersState] = useState({ type: "", method: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [lastModified, setLastModified] = useState(0);
 
   // โหลดรายการจาก API — useCallback ป้องกันการสร้างฟังก์ชันใหม่ทุก render
   const fetchTransactions = useCallback(async (page = 1, currentFilters = filters) => {
@@ -44,27 +45,27 @@ export const TransactionProvider = ({ children }) => {
     fetchTransactions(1, updated);
   };
 
-  // สร้างรายการใหม่ แล้ว reload หน้าปัจจุบัน
   const addTransaction = async (data) => {
     const result = await transactionService.createTransaction(data);
     await fetchTransactions(pagination.page);
+    setLastModified(Date.now());
     return result;
   };
 
-  // แก้ไขรายการ แล้ว reload หน้าปัจจุบัน
   const editTransaction = async (id, data) => {
     const result = await transactionService.updateTransaction(id, data);
     await fetchTransactions(pagination.page);
+    setLastModified(Date.now());
     return result;
   };
 
-  // ลบรายการ แล้ว reload — ถ้าหน้านี้ไม่มีข้อมูลเหลือ ให้กลับหน้าก่อน
   const removeTransaction = async (id) => {
     await transactionService.deleteTransaction(id);
     const newPage = transactions.length === 1 && pagination.page > 1
       ? pagination.page - 1
       : pagination.page;
     await fetchTransactions(newPage);
+    setLastModified(Date.now());
   };
 
   const value = {
@@ -73,6 +74,7 @@ export const TransactionProvider = ({ children }) => {
     filters,
     loading,
     error,
+    lastModified,
     fetchTransactions,
     setFilters,
     addTransaction,

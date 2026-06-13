@@ -75,6 +75,13 @@ const IconTrash = () => (
   </svg>
 );
 
+const getPageNums = (current, total) => {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, "…", total];
+  if (current >= total - 3) return [1, "…", total - 4, total - 3, total - 2, total - 1, total];
+  return [1, "…", current - 1, current, current + 1, "…", total];
+};
+
 export default function TransactionPage({ onAdd, onEdit, onBack }) {
   const {
     transactions,
@@ -88,11 +95,16 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
   } = useTransactions(); // ดึงข้อมูลและฟังก์ชันที่จำเป็นจาก context
   const { user } = useAuth(); // ดึงข้อมูล user ที่ login อยู่ (ใช้เช็คสิทธิ์ edit/delete)
 
-  const [deletingId, setDeletingId] = useState(null); // เก็บ id ของ transaction ที่กำลังถูกลบ เพื่อแสดง loading state บนปุ่ม delete
+  const [deletingId, setDeletingId] = useState(null);
+
+  const goToPage = (page) => {
+    fetchTransactions(page);
+    document.querySelector("main")?.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   useEffect(() => {
     fetchTransactions(1);
-  }, []); // [] หมายความว่า fetchTransactions จะถูกเรียกแค่ตอนโหลดครั้งแรกเท่านั้น
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this transaction?")) return;
@@ -149,7 +161,7 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
           </div>
         </div>
         <button
-          onClick={onAdd}
+          onClick={() => onAdd()}
           className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
         >
           <svg
@@ -224,7 +236,7 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
             Start by adding your first record
           </p>
           <button
-            onClick={onAdd}
+            onClick={() => onAdd()}
             className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl active:scale-95 transition-all"
           >
             <svg
@@ -334,25 +346,49 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
       )}
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="flex justify-center items-center gap-3 mt-8">
-          <button
-            disabled={pagination.page <= 1 || loading}
-            onClick={() => fetchTransactions(pagination.page - 1)}
-            className="px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-40 hover:shadow-sm active:scale-95 transition-all"
-          >
-            ← Prev
-          </button>
-          <span className="text-sm text-gray-400 tabular-nums">
-            {pagination.page} / {pagination.totalPages}
-          </span>
-          <button
-            disabled={pagination.page >= pagination.totalPages || loading}
-            onClick={() => fetchTransactions(pagination.page + 1)}
-            className="px-4 py-2 rounded-xl text-sm font-medium bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 disabled:opacity-40 hover:shadow-sm active:scale-95 transition-all"
-          >
-            Next →
-          </button>
+      {pagination.total > 0 && (
+        <div className="mt-8 space-y-3">
+          <p className="text-center text-xs text-gray-400 tabular-nums">
+            Showing {(pagination.page - 1) * 20 + 1}–{Math.min(pagination.page * 20, pagination.total)} of {pagination.total} records
+          </p>
+          {pagination.totalPages > 1 && (
+            <div className="flex justify-center items-center gap-1.5">
+              <button
+                disabled={pagination.page <= 1 || loading}
+                onClick={() => goToPage(pagination.page - 1)}
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 disabled:opacity-40 hover:border-primary/50 active:scale-95 transition-all"
+              >
+                ←
+              </button>
+
+              {getPageNums(pagination.page, pagination.totalPages).map((p, i) =>
+                p === "…" ? (
+                  <span key={`e${i}`} className="w-9 text-center text-sm text-gray-400">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => goToPage(p)}
+                    disabled={loading}
+                    className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
+                      p === pagination.page
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-primary/50 disabled:opacity-40"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                disabled={pagination.page >= pagination.totalPages || loading}
+                onClick={() => goToPage(pagination.page + 1)}
+                className="w-9 h-9 flex items-center justify-center rounded-xl text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-500 disabled:opacity-40 hover:border-primary/50 active:scale-95 transition-all"
+              >
+                →
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
