@@ -78,7 +78,7 @@ function App() {
         </div>
       </main>
 
-      <BottomNav active={currentPage} onChange={setCurrentPage} />
+      <BottomNav active={currentPage} onChange={setCurrentPage} onAdd={handleOpenAdd} />
 
       {showAddForm && (
         <TransactionForm
