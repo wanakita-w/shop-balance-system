@@ -38,44 +38,44 @@ export default function HomePage({ onAdd, onNavigate }) {
           {net < 0 ? "−" : ""}฿{fmt(Math.abs(net))}
         </h2>
         <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white/10 rounded-2xl p-4">
-            <div className="flex items-center gap-1.5 mb-1">
-              <svg
-                className="w-3.5 h-3.5 text-green-300"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M7 11l5-5m0 0l5 5m-5-5v12"
-                />
-              </svg>
-              <p className="text-xs text-blue-100 font-medium">Income</p>
+          <button
+            onClick={() => onAdd({ type: "INCOME" })}
+            className="bg-white/10 rounded-2xl p-4 text-left active:bg-white/20 transition-colors w-full"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-green-300" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12" />
+                </svg>
+                <p className="text-xs text-blue-100 font-medium">Income</p>
+              </div>
+              <div className="w-5 h-5 rounded-full bg-green-400/30 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-green-300" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
             </div>
             <p className="text-xl font-bold text-green-300">฿{fmt(income)}</p>
-          </div>
-          <div className="bg-white/10 rounded-2xl p-4">
-            <div className="flex items-center gap-1.5 mb-1">
-              <svg
-                className="w-3.5 h-3.5 text-red-300"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={2.5}
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17 13l-5 5m0 0l-5-5m5 5V6"
-                />
-              </svg>
-              <p className="text-xs text-blue-100 font-medium">Expense</p>
+          </button>
+          <button
+            onClick={() => onAdd({ type: "EXPENSE" })}
+            className="bg-white/10 rounded-2xl p-4 text-left active:bg-white/20 transition-colors w-full"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5">
+                <svg className="w-3.5 h-3.5 text-red-300" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 13l-5 5m0 0l-5-5m5 5V6" />
+                </svg>
+                <p className="text-xs text-blue-100 font-medium">Expense</p>
+              </div>
+              <div className="w-5 h-5 rounded-full bg-red-400/30 flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-red-300" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
             </div>
             <p className="text-xl font-bold text-red-300">฿{fmt(expense)}</p>
-          </div>
+          </button>
         </div>
       </div>
 

@@ -159,10 +159,9 @@ export default function TransactionPage({ onAdd, onEdit, onBack }) {
             </p>
           </div>
         </div>
-        {/* Desktop add button — FAB covers mobile */}
         <button
           onClick={onAdd}
-          className="hidden md:flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
+          className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm hover:shadow-md active:scale-95 transition-all duration-150"
         >
           <svg
             className="w-4 h-4"

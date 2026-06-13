@@ -16,7 +16,7 @@ const IconTransfer = () => (
 
 export default function TransactionForm({ isOpen, onClose, transaction = null }) {
   const { addTransaction, editTransaction } = useTransactions();
-  const isEditing = transaction !== null;
+  const isEditing = Boolean(transaction?.id);
 
   const [formData, setFormData] = useState({
     type: transaction?.type || "EXPENSE",

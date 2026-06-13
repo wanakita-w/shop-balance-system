@@ -24,8 +24,8 @@ function App() {
   }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ฟังก์ชันสำหรับเปิดฟอร์มเพิ่มรายการใหม่ edit จะเป็น null ส่วนถ้าเปิดเพื่อแก้ไข จะส่ง transaction ที่ต้องการแก้ไขเข้าไป
-  const handleOpenAdd = () => {
-    setEditingTransaction(null);
+  const handleOpenAdd = (defaults = null) => {
+    setEditingTransaction(defaults);
     setShowAddForm(true);
   };
   const handleOpenEdit = (tx) => {
@@ -78,7 +78,7 @@ function App() {
         </div>
       </main>
 
-      <BottomNav active={currentPage} onChange={setCurrentPage} onAdd={handleOpenAdd} />
+      <BottomNav active={currentPage} onChange={setCurrentPage} />
 
       {showAddForm && (
         <TransactionForm
