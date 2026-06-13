@@ -8,6 +8,7 @@ import ProfilePage from "./pages/ProfilePage";
 import TransactionPage from "./pages/TransactionPage";
 import TransactionForm from "./components/TransactionForm";
 import AdminPage from "./pages/AdminPage";
+import DailyReportPage from "./pages/DailyReportPage";
 import Header from "./components/Header";
 import BottomNav from "./components/BottomNav";
 
@@ -51,14 +52,14 @@ function App() {
 
   // Layout หลักของแอป เมื่อ user เข้าสู่ระบบแล้ว
   return (
-    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="h-screen flex flex-col bg-gray-50 dark:bg-gray-900 print:h-auto print:block">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
 
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 overflow-y-auto print:overflow-visible print:h-auto">
         <div className="max-w-xl mx-auto px-4 pt-5 pb-6">
           {/* ── HOME ── */}
           {currentPage === "home" && (
-            <HomePage onAdd={handleOpenAdd} onNavigate={setCurrentPage} />
+            <HomePage onAdd={handleOpenAdd} onNavigate={setCurrentPage} onDailyReport={() => setCurrentPage("daily-report")} />
           )}
 
           {/* ── TRANSACTIONS ── */}
@@ -68,6 +69,11 @@ function App() {
               onEdit={handleOpenEdit}
               onBack={() => setCurrentPage("home")}
             />
+          )}
+
+          {/* ── DAILY REPORT ── */}
+          {currentPage === "daily-report" && (
+            <DailyReportPage onBack={() => setCurrentPage("home")} />
           )}
 
           {/* ── ADMIN ── */}

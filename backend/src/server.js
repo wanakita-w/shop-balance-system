@@ -5,6 +5,7 @@ import prisma from "./db.js";
 import authRoutes from "./routes/auth.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
 import userRoutes from "./routes/user.routes.js";
+import dailyReportRoutes from "./routes/daily-report.routes.js";
 
 // โหลดค่าจาก .env
 dotenv.config();
@@ -49,6 +50,7 @@ app.get("/api/health", async (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/stats", dailyReportRoutes);
 
 // === Start Server ===
 app.listen(PORT, () => {

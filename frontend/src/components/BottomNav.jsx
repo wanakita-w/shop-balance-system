@@ -29,7 +29,7 @@ const TABS = [
 
 export default function BottomNav({ active, onChange }) {
   return (
-    <nav className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:hidden flex-shrink-0">
+    <nav className="print:hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 md:hidden flex-shrink-0">
       <div className="flex items-center h-16 max-w-xl mx-auto px-2">
         {TABS.map((tab) => (
           <button

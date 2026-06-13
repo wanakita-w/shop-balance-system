@@ -29,6 +29,9 @@ export const ERROR_MESSAGES = {
   INVALID_TRANSACTION_TYPE: "ประเภทรายการไม่ถูกต้อง (ต้องเป็น INCOME หรือ EXPENSE)",
   INVALID_PAYMENT_METHOD: "วิธีชำระเงินไม่ถูกต้อง (ต้องเป็น CASH หรือ TRANSFER)",
 
+  // Daily report errors
+  REPORT_ALREADY_EXISTS: "ปิดยอดวันนี้ไปแล้ว",
+
   // General errors
   INTERNAL_ERROR: "เกิดข้อผิดพลาดในระบบ",
   NOT_FOUND: "ไม่พบข้อมูลที่ต้องการ",
