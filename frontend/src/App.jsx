@@ -15,9 +15,10 @@ import BottomNav from "./components/BottomNav";
 function App() {
   const { user, loading } = useAuth();
   const { fetchTransactions } = useTransactions();
-  const [currentPage, setCurrentPage] = useState("home"); // เริ่มต้นที่หน้า Home ใช้เก็บสถานะว่าผู้ใช้กำลังดูหน้าไหนอยู่
-  const [showAddForm, setShowAddForm] = useState(false); // เริ่มต้นที่ไม่แสดงฟอร์ม
+  const [currentPage, setCurrentPage] = useState("home");
+  const [showAddForm, setShowAddForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [dailyReportPeriod, setDailyReportPeriod] = useState(null);
 
   // เมื่อ user เปลี่ยนค่า และไม่เป็น null ให้ fetch transactions ของ user นั้น
   useEffect(() => {
@@ -59,7 +60,7 @@ function App() {
         <div className="max-w-xl mx-auto px-4 pt-5 pb-6">
           {/* ── HOME ── */}
           {currentPage === "home" && (
-            <HomePage onAdd={handleOpenAdd} onNavigate={setCurrentPage} onDailyReport={() => setCurrentPage("daily-report")} />
+            <HomePage onAdd={handleOpenAdd} onNavigate={setCurrentPage} onDailyReport={(period) => { setDailyReportPeriod(period); setCurrentPage("daily-report"); }} />
           )}
 
           {/* ── TRANSACTIONS ── */}
@@ -73,7 +74,7 @@ function App() {
 
           {/* ── DAILY REPORT ── */}
           {currentPage === "daily-report" && (
-            <DailyReportPage onBack={() => setCurrentPage("home")} />
+            <DailyReportPage onBack={() => setCurrentPage("home")} initialPeriod={dailyReportPeriod} />
           )}
 
           {/* ── ADMIN ── */}

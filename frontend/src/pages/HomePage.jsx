@@ -40,7 +40,7 @@ const EMPTY_STATS = { totalIncome: 0, totalExpense: 0, netProfit: 0, cashIncome:
 
 export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
   const { transactions, loading: txLoading } = useTransactions();
-  const [period, setPeriod] = useState("month");
+  const [period, setPeriod] = useState("today");
   const [stats, setStats] = useState(EMPTY_STATS);
   const [statsLoading, setStatsLoading] = useState(false);
 
@@ -138,7 +138,7 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
 
       {/* Summary shortcut */}
       <button
-        onClick={onDailyReport}
+        onClick={() => onDailyReport(period)}
         className="w-full flex items-center gap-3 bg-white dark:bg-gray-800 rounded-2xl px-4 py-3.5 border border-gray-100 dark:border-gray-700/50 shadow-sm active:scale-[0.98] transition-transform"
       >
         <div className="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/40 flex items-center justify-center flex-shrink-0">

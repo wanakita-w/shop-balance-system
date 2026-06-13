@@ -191,18 +191,27 @@ function openPrintWindow(result, generatedRange, generatedAt) {
 
 /* ── Page component ─────────────────────────────────────── */
 
-export default function DailyReportPage({ onBack }) {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+const PERIOD_TO_PRESET = { today: "Today", month: "This Month" };
 
-  const [start, setStart] = useState(toLocalInput(startOfDay));
-  const [end, setEnd] = useState(toLocalInput(now));
+export default function DailyReportPage({ onBack, initialPeriod }) {
+  const getInitialValues = () => {
+    const presetLabel = PERIOD_TO_PRESET[initialPeriod];
+    const preset = PRESETS.find((p) => p.label === presetLabel);
+    if (preset) return { ...preset.getValue(), activePreset: preset.label };
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+    return { start: toLocalInput(startOfDay), end: toLocalInput(now), activePreset: "Today" };
+  };
+
+  const init = getInitialValues();
+  const [start, setStart] = useState(init.start);
+  const [end, setEnd] = useState(init.end);
   const [result, setResult] = useState(null);
   const [generatedAt, setGeneratedAt] = useState(null);
   const [generatedRange, setGeneratedRange] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [activePreset, setActivePreset] = useState("Today");
+  const [activePreset, setActivePreset] = useState(init.activePreset);
 
   const handlePreset = (preset) => {
     const { start: s, end: e } = preset.getValue();
