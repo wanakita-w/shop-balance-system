@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getSummary } from "../services/dailyReportService";
 
 const fmt = (n) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(n ?? 0);
@@ -12,7 +12,7 @@ const fmtDisplay = (localStr) => {
 
 const toLocalInput = (date) => {
   const pad = (n) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 };
 
 const PRESETS = [
@@ -210,7 +210,7 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
   const [result, setResult] = useState(null);
   const [generatedAt, setGeneratedAt] = useState(null);
   const [generatedRange, setGeneratedRange] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activePreset, setActivePreset] = useState(init.activePreset);
 
@@ -240,6 +240,24 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let cancelled = false;
+    getSummary({
+      start: new Date(init.start).toISOString(),
+      end: new Date(init.end).toISOString(),
+    })
+      .then((res) => {
+        if (!cancelled) {
+          setResult(res.data.data);
+          setGeneratedAt(new Date());
+          setGeneratedRange({ start: init.start, end: init.end });
+        }
+      })
+      .catch(() => { if (!cancelled) setError("Something went wrong. Please try again."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-5">
