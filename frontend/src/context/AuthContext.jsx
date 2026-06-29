@@ -26,29 +26,16 @@ export const AuthProvider = ({ children }) => {
 
   // Login
   const login = async (credentials) => {
-    setLoading(true);
-    try {
-      const result = await authService.login(credentials);
-
-      if (result.success) {
-        setUser(result.data.user);
-      }
-
-      return result;
-    } finally {
-      setLoading(false);
+    const result = await authService.login(credentials);
+    if (result.success) {
+      setUser(result.data.user);
     }
+    return result;
   };
 
   // Register
   const register = async (userData) => {
-    setLoading(true);
-    try {
-      const result = await authService.register(userData);
-      return result;
-    } finally {
-      setLoading(false);
-    }
+    return await authService.register(userData);
   };
 
   // Logout
