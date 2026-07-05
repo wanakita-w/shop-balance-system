@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { getSummary } from "../services/dailyReportService";
+import { aiService } from "../services/aiService";
 
 const fmt = (n) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(n ?? 0);
 const amtFmt = (n) => n < 0 ? `(฿&nbsp;${fmt(Math.abs(n))})` : `฿&nbsp;${fmt(n)}`;
@@ -16,18 +17,25 @@ const toLocalInput = (date) => {
 };
 
 const PRESETS = [
-  { label: "Today", getValue: () => {
+  { label: "Today", periodLabel: "วันนี้", getValue: () => {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
     return { start: toLocalInput(start), end: toLocalInput(now) };
   }},
-  { label: "Yesterday", getValue: () => {
+  { label: "Yesterday", periodLabel: "เมื่อวาน", getValue: () => {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
     const end   = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
     return { start: toLocalInput(start), end: toLocalInput(end) };
   }},
-  { label: "This Month", getValue: () => {
+  { label: "This Week", periodLabel: "สัปดาห์นี้", getValue: () => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diff, 0, 0, 0);
+    return { start: toLocalInput(start), end: toLocalInput(now) };
+  }},
+  { label: "This Month", periodLabel: "เดือนนี้", getValue: () => {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
     return { start: toLocalInput(start), end: toLocalInput(now) };
@@ -197,10 +205,10 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
   const getInitialValues = () => {
     const presetLabel = PERIOD_TO_PRESET[initialPeriod];
     const preset = PRESETS.find((p) => p.label === presetLabel);
-    if (preset) return { ...preset.getValue(), activePreset: preset.label };
+    if (preset) return { ...preset.getValue(), activePreset: preset.label, periodLabel: preset.periodLabel };
     const now = new Date();
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-    return { start: toLocalInput(startOfDay), end: toLocalInput(now), activePreset: "Today" };
+    return { start: toLocalInput(startOfDay), end: toLocalInput(now), activePreset: "Today", periodLabel: "วันนี้" };
   };
 
   const init = getInitialValues();
@@ -213,19 +221,28 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activePreset, setActivePreset] = useState(init.activePreset);
+  const [periodLabel, setPeriodLabel] = useState(init.periodLabel);
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
 
   const handlePreset = (preset) => {
     const { start: s, end: e } = preset.getValue();
     setStart(s);
     setEnd(e);
     setActivePreset(preset.label);
+    setPeriodLabel(preset.periodLabel);
     setResult(null);
+    setAiAnalysis(null);
+    setAiError("");
   };
 
   const handleGenerate = async () => {
     setLoading(true);
     setError("");
     setResult(null);
+    setAiAnalysis(null);
+    setAiError("");
     try {
       const res = await getSummary({
         start: new Date(start).toISOString(),
@@ -238,6 +255,24 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
       setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAiAnalyze = async () => {
+    setAiLoading(true);
+    setAiError("");
+    setAiAnalysis(null);
+    try {
+      const res = await aiService.analyze(
+        new Date(start).toISOString(),
+        new Date(end).toISOString(),
+        periodLabel
+      );
+      setAiAnalysis(res.data.analysis);
+    } catch {
+      setAiError("วิเคราะห์ไม่สำเร็จ กรุณาลองใหม่");
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -276,12 +311,12 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
 
       {/* Picker */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm p-4 space-y-4">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-1">
           {PRESETS.map((p) => (
             <button
               key={p.label}
               onClick={() => handlePreset(p)}
-              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+              className={`flex-1 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                 activePreset === p.label
                   ? "bg-primary text-white border-primary"
                   : "bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600"
@@ -411,6 +446,62 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
               </p>
             </div>
           </div>
+
+          {/* AI Analyze button */}
+          {!aiAnalysis && (
+            <button
+              onClick={handleAiAnalyze}
+              disabled={aiLoading}
+              className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-sm"
+            >
+              {aiLoading ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                  </svg>
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  Analyze with AI
+                </>
+              )}
+            </button>
+          )}
+
+          {aiError && (
+            <p className="text-sm text-red-500 text-center">{aiError}</p>
+          )}
+
+          {/* AI Analysis result card */}
+          {aiAnalysis && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-violet-200 dark:border-violet-800/50 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-gradient-to-r from-violet-500 to-purple-600 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <span className="text-sm font-semibold text-white">AI Analysis · {periodLabel}</span>
+                </div>
+                <button
+                  onClick={handleAiAnalyze}
+                  disabled={aiLoading}
+                  className="text-xs text-white/80 hover:text-white font-medium disabled:opacity-50 transition-colors"
+                >
+                  {aiLoading ? "Analyzing..." : "Re-analyze"}
+                </button>
+              </div>
+              <div className="px-4 py-4 space-y-2.5">
+                {aiAnalysis.split("\n").filter(Boolean).map((line, i) => (
+                  <p key={i} className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed">{line}</p>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

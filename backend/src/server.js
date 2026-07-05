@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.routes.js";
 import transactionRoutes from "./routes/transaction.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import dailyReportRoutes from "./routes/daily-report.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 
 // โหลดค่าจาก .env
 dotenv.config();
@@ -51,6 +52,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/stats", dailyReportRoutes);
+app.use("/api/ai", aiRoutes);
 
 // === Start Server ===
 app.listen(PORT, () => {

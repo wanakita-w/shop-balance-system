@@ -56,7 +56,7 @@ function App() {
     <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900 print:h-auto print:block">
       <Header currentPage={currentPage} onNavigate={setCurrentPage} />
 
-      <main className="flex-1 overflow-y-auto overscroll-none print:overflow-visible print:h-auto">
+      <main className="flex-1 overflow-y-auto overscroll-none print:overflow-visible print:h-auto [scrollbar-gutter:stable]">
         <div className="max-w-xl mx-auto px-4 pt-5 pb-6">
           {/* ── HOME ── */}
           {currentPage === "home" && (
