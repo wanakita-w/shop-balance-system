@@ -327,14 +327,14 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
           ))}
         </div>
 
-        <div className="space-y-2 overflow-hidden">
+        <div className="space-y-2">
           <div>
             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">From</p>
             <input
               type="datetime-local"
               value={start}
               onChange={(e) => { setStart(e.target.value); setActivePreset(""); setResult(null); }}
-              className="w-full min-w-0 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="w-full min-w-0 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-left text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
           </div>
           <div>
@@ -343,7 +343,7 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
               type="datetime-local"
               value={end}
               onChange={(e) => { setEnd(e.target.value); setActivePreset(""); setResult(null); }}
-              className="w-full min-w-0 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              className="w-full min-w-0 px-3 py-2.5 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-left text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             />
           </div>
         </div>
