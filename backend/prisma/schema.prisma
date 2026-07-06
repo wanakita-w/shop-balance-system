@@ -1,13 +1,147 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ========================================
+// SECTION 1: USER & AUTHENTICATION
+// ========================================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transactions   Transaction[]
+  stockMovements StockMovement[]
+  dailyReports   DailyReport[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+// ========================================
+// SECTION 2: TRANSACTIONS
+// ========================================
+
+model Transaction {
+  id        String          @id @default(cuid())
+  type      TransactionType
+  amount    Float
+  method    PaymentMethod
+  category  String?
+  note      String?
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dailyReportId String?
+  dailyReport   DailyReport? @relation(fields: [dailyReportId], references: [id])
+
+  @@map("transactions")
+  @@index([userId])
+  @@index([createdAt])
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+}
+
+// ========================================
+// SECTION 3: PRODUCTS & STOCK
+// ========================================
+
+model Product {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  unit         String   @default("ชิ้น")
+  currentStock Int      @default(0)
+  minStock     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  stockMovements StockMovement[]
+
+  @@map("products")
+}
+
+model StockMovement {
+  id           String            @id @default(cuid())
+  type         StockMovementType
+  quantity     Int
+  note         String?
+  pricePerUnit Float?
+  createdAt    DateTime          @default(now())
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("stock_movements")
+  @@index([productId])
+  @@index([createdAt])
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  ADJUST
+}
+
+// ========================================
+// SECTION 4: DAILY REPORTS
+// ========================================
+
+model DailyReport {
+  id          String   @id @default(cuid())
+  date        DateTime
+  
+  totalIncome     Float
+  totalExpense    Float
+  netProfit       Float
+  
+  cashIncome      Float
+  transferIncome  Float
+  cashExpense     Float
+  transferExpense Float
+  
+  expectedCash   Float
+  actualCash     Float?
+  cashDifference Float? @default(0)
+  
+  note String?
+  
+  createdAt DateTime @default(now())
+  closedAt  DateTime @default(now())
+
+  closedByUserId String
+  closedByUser   User   @relation(fields: [closedByUserId], references: [id])
+
+  transactions Transaction[]
+
+  @@map("daily_reports")
+  @@index([date])
 }

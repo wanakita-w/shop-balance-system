@@ -1,6 +1,12 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import prisma from "./db.js";
+import authRoutes from "./routes/auth.routes.js";
+import transactionRoutes from "./routes/transaction.routes.js";
+import userRoutes from "./routes/user.routes.js";
+import dailyReportRoutes from "./routes/daily-report.routes.js";
+import aiRoutes from "./routes/ai.routes.js";
 
 // โหลดค่าจาก .env
 dotenv.config();
@@ -21,10 +27,32 @@ app.use(
 );
 
 // === Routes ===
-// test route
-app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", message: "Server is running" });
+// Test route - เช็คสถานะ server และ database
+app.get("/api/health", async (req, res) => {
+  try {
+    // ลองนับจำนวน User ใน database
+    const userCount = await prisma.user.count();
+
+    res.json({
+      status: "ok",
+      message: "Server is running",
+      database: "connected",
+      userCount: userCount,
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: "error",
+      message: "Database connection failed",
+      error: error.message,
+    });
+  }
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/transactions", transactionRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/stats", dailyReportRoutes);
+app.use("/api/ai", aiRoutes);
 
 // === Start Server ===
 app.listen(PORT, () => {

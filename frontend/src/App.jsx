@@ -1,12 +1,99 @@
+// import สิ่งที่ต้องใช้จาก React และ context และ components ต่างๆ
+import { useState, useEffect } from "react";
+import { useAuth } from "./context/AuthContext";
+import { useTransactions } from "./context/TransactionContext";
+import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/HomePage";
+import ProfilePage from "./pages/ProfilePage";
+import TransactionPage from "./pages/TransactionPage";
+import TransactionForm from "./components/TransactionForm";
+import AdminPage from "./pages/AdminPage";
+import DailyReportPage from "./pages/DailyReportPage";
+import Header from "./components/Header";
+import BottomNav from "./components/BottomNav";
+
 function App() {
-  return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-blue-600">
-          🏪 ระบบจัดการร้านค้า
-        </h1>
-        <p className="text-gray-500 mt-2">Tailwind CSS ทำงานแล้ว ✅</p>
+  const { user, loading } = useAuth();
+  const { fetchTransactions } = useTransactions();
+  const [currentPage, setCurrentPage] = useState("home");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [dailyReportPeriod, setDailyReportPeriod] = useState(null);
+
+  // เมื่อ user เปลี่ยนค่า และไม่เป็น null ให้ fetch transactions ของ user นั้น
+  useEffect(() => {
+    if (user) fetchTransactions(1);
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ฟังก์ชันสำหรับเปิดฟอร์มเพิ่มรายการใหม่ edit จะเป็น null ส่วนถ้าเปิดเพื่อแก้ไข จะส่ง transaction ที่ต้องการแก้ไขเข้าไป
+  const handleOpenAdd = (defaults = null) => {
+    setEditingTransaction(defaults);
+    setShowAddForm(true);
+  };
+  const handleOpenEdit = (tx) => {
+    setEditingTransaction(tx);
+    setShowAddForm(true);
+  };
+  const handleCloseForm = () => {
+    setShowAddForm(false);
+    setEditingTransaction(null);
+  };
+
+  // ถ้าโหลดอยู่ แสดง spinner
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" />
       </div>
+    );
+  }
+
+  // ถ้าไม่มี user แสดงหน้า login
+  if (!user) return <LoginPage />;
+
+  // Layout หลักของแอป เมื่อ user เข้าสู่ระบบแล้ว
+  return (
+    <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900 print:h-auto print:block">
+      <Header currentPage={currentPage} onNavigate={setCurrentPage} />
+
+      <main className="flex-1 overflow-y-auto overscroll-none print:overflow-visible print:h-auto [scrollbar-gutter:stable]">
+        <div className="max-w-xl mx-auto px-4 pt-5 pb-6">
+          {/* ── HOME ── */}
+          {currentPage === "home" && (
+            <HomePage onAdd={handleOpenAdd} onNavigate={setCurrentPage} onDailyReport={(period) => { setDailyReportPeriod(period); setCurrentPage("daily-report"); }} />
+          )}
+
+          {/* ── TRANSACTIONS ── */}
+          {currentPage === "transactions" && (
+            <TransactionPage
+              onAdd={handleOpenAdd}
+              onEdit={handleOpenEdit}
+              onBack={() => setCurrentPage("home")}
+            />
+          )}
+
+          {/* ── DAILY REPORT ── */}
+          {currentPage === "daily-report" && (
+            <DailyReportPage onBack={() => setCurrentPage("home")} initialPeriod={dailyReportPeriod} />
+          )}
+
+          {/* ── ADMIN ── */}
+          {currentPage === "admin" && <AdminPage />}
+
+          {/* ── PROFILE ── */}
+          {currentPage === "profile" && <ProfilePage onNavigate={setCurrentPage} />}
+        </div>
+      </main>
+
+      <BottomNav active={currentPage} onChange={setCurrentPage} />
+
+      {showAddForm && (
+        <TransactionForm
+          isOpen={showAddForm}
+          onClose={handleCloseForm}
+          transaction={editingTransaction}
+        />
+      )}
     </div>
   );
 }
