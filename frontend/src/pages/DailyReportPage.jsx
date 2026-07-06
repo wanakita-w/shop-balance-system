@@ -327,7 +327,7 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
           ))}
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 overflow-hidden">
           <div>
             <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">From</p>
             <input
