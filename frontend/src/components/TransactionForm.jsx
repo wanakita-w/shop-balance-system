@@ -3,18 +3,48 @@ import { useTransactions } from "../context/TransactionContext";
 import Modal from "./ui/Modal";
 
 const IconCash = () => (
-  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+  <svg
+    className="w-4 h-4 flex-shrink-0"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+    />
   </svg>
 );
 
 const IconTransfer = () => (
-  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+  <svg
+    className="w-4 h-4 flex-shrink-0"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.8}
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+    />
   </svg>
 );
 
-export default function TransactionForm({ isOpen, onClose, transaction = null }) {
+// หมวดหมู่ที่ใช้บ่อย แยกตามประเภท กดเลือกได้เลยไม่ต้องพิมพ์
+const CATEGORY_PRESETS = {
+  EXPENSE: ["ต้นทุนสินค้า", "อาหาร", "ของใช้", "ค่าแรง", "ค่าเช่า", "อื่นๆ"],
+  INCOME: ["ขายสินค้า", "เงินทุน", "เงินทอน", "อื่นๆ"],
+};
+
+export default function TransactionForm({
+  isOpen,
+  onClose,
+  transaction = null,
+}) {
   const { addTransaction, editTransaction } = useTransactions();
   const isEditing = Boolean(transaction?.id);
 
@@ -42,6 +72,14 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // กดหมวดหมู่: เลือก = ใส่ค่า, กดซ้ำที่เลือกอยู่ = ยกเลิก
+  const selectCategory = (cat) => {
+    setFormData((prev) => ({
+      ...prev,
+      category: prev.category === cat ? "" : cat,
+    }));
+  };
+
   const validate = () => {
     const newErrors = {};
     if (!formData.amount || Number(formData.amount) <= 0)
@@ -52,7 +90,10 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
-    if (Object.keys(newErrors).length > 0) { setErrors(newErrors); return; }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     setIsLoading(true);
     setSubmitError("");
@@ -71,7 +112,10 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
       }
       onClose();
     } catch (err) {
-      setSubmitError(err.response?.data?.message || "Something went wrong. Please try again.");
+      setSubmitError(
+        err.response?.data?.message ||
+          "Something went wrong. Please try again.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -85,12 +129,13 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
       size="sm"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-
         {/* Type toggle — sliding pill */}
         <div className="relative flex p-1 bg-gray-100 dark:bg-gray-700/60 rounded-2xl">
           <div
             className={`absolute top-1 bottom-1 w-[calc(50%-4px)] rounded-xl shadow-sm transition-all duration-300 ease-in-out ${
-              isIncome ? "left-1 bg-green-500" : "left-[calc(50%+3px)] bg-red-500"
+              isIncome
+                ? "left-1 bg-green-500"
+                : "left-[calc(50%+3px)] bg-red-500"
             }`}
           />
           {[
@@ -102,7 +147,9 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
               type="button"
               onClick={() => handleToggle("type", value)}
               className={`relative z-10 flex-1 py-2.5 text-sm font-semibold rounded-xl transition-colors duration-200 active:scale-[0.97] ${
-                formData.type === value ? "text-white" : "text-gray-500 dark:text-gray-400"
+                formData.type === value
+                  ? "text-white"
+                  : "text-gray-500 dark:text-gray-400"
               }`}
             >
               {label}
@@ -111,18 +158,24 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
         </div>
 
         {/* Amount input */}
-        <div className={`rounded-3xl px-5 py-6 transition-colors duration-300 ${
-          isIncome
-            ? "bg-green-50 dark:bg-green-900/20"
-            : "bg-red-50 dark:bg-red-900/20"
-        }`}>
+        <div
+          className={`rounded-3xl px-5 py-6 transition-colors duration-300 ${
+            isIncome
+              ? "bg-green-50 dark:bg-green-900/20"
+              : "bg-red-50 dark:bg-red-900/20"
+          }`}
+        >
           <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-gray-400 text-center mb-3">
             Amount · THB
           </p>
           <div className="flex items-center justify-center gap-1">
-            <span className={`text-3xl font-bold transition-colors duration-300 flex-shrink-0 ${
-              isIncome ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
-            }`}>
+            <span
+              className={`text-3xl font-bold transition-colors duration-300 flex-shrink-0 ${
+                isIncome
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-500 dark:text-red-400"
+              }`}
+            >
               ฿
             </span>
             <input
@@ -134,12 +187,16 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
               onChange={handleChange}
               autoFocus={!isEditing}
               className={`bg-transparent text-4xl font-bold outline-none placeholder-gray-200 dark:placeholder-gray-700 text-center min-w-0 w-full transition-colors duration-300 ${
-                isIncome ? "text-green-600 dark:text-green-400" : "text-red-500 dark:text-red-400"
+                isIncome
+                  ? "text-green-600 dark:text-green-400"
+                  : "text-red-500 dark:text-red-400"
               }`}
             />
           </div>
           {errors.amount && (
-            <p className="text-xs text-red-500 mt-2.5 text-center font-medium">{errors.amount}</p>
+            <p className="text-xs text-red-500 mt-2.5 text-center font-medium">
+              {errors.amount}
+            </p>
           )}
         </div>
 
@@ -167,10 +224,27 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
 
         {/* Details */}
         <div className="space-y-2">
+          {/* Quick category chips — กดเลือกหมวดที่ใช้บ่อย */}
+          <div className="flex flex-wrap gap-2">
+            {CATEGORY_PRESETS[formData.type].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => selectCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ease-out active:scale-90 ${
+                  formData.category === cat
+                    ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
+                    : "bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
           <input
             name="category"
             type="text"
-            placeholder="Category  (e.g. Food, Labor)"
+            placeholder="Or type a custom category"
             value={formData.category}
             onChange={handleChange}
             className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-700 rounded-2xl text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
@@ -188,7 +262,9 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
         {/* API error */}
         {submitError && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-2xl p-3.5">
-            <p className="text-sm text-red-600 dark:text-red-400 text-center">{submitError}</p>
+            <p className="text-sm text-red-600 dark:text-red-400 text-center">
+              {submitError}
+            </p>
           </div>
         )}
 
@@ -205,21 +281,41 @@ export default function TransactionForm({ isOpen, onClose, transaction = null })
             type="submit"
             disabled={isLoading}
             className={`flex-1 py-3 rounded-2xl text-sm font-semibold text-white shadow-sm active:scale-[0.97] transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed ${
-              isIncome ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+              isIncome
+                ? "bg-green-500 hover:bg-green-600"
+                : "bg-red-500 hover:bg-red-600"
             }`}
           >
             {isLoading ? (
               <span className="flex items-center justify-center gap-2">
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                <svg
+                  className="w-4 h-4 animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  />
                 </svg>
                 Saving...
               </span>
-            ) : isEditing ? "Save Changes" : `Add ${isIncome ? "Income" : "Expense"}`}
+            ) : isEditing ? (
+              "Save Changes"
+            ) : (
+              `Add ${isIncome ? "Income" : "Expense"}`
+            )}
           </button>
         </div>
-
       </form>
     </Modal>
   );
