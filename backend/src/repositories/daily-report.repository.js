@@ -45,3 +45,13 @@ export const getTopExpenses = async (start, end, limit = 3) => {
     select: { amount: true, category: true, note: true },
   });
 };
+
+// ดึงรายการดิบในช่วงเวลา (เฉพาะ field ที่ใช้ทำกราฟแนวโน้ม) เอาไปจัดกลุ่มตามวันในชั้น service
+export const getTransactionsInRange = async (start, end) => {
+  const where = buildWhere(start, end);
+  return prisma.transaction.findMany({
+    where,
+    select: { amount: true, type: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+};
