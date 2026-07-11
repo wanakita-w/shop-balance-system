@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useTransactions } from "../context/TransactionContext";
-import { getSummary } from "../services/dailyReportService";
+import { getSummary, getCategories } from "../services/dailyReportService";
+import TrendChart from "../components/TrendChart";
+import CategoryChart from "../components/CategoryChart";
 
 const fmt = (n) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(n ?? 0);
 
@@ -43,20 +45,31 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
   const [period, setPeriod] = useState("today");
   const [stats, setStats] = useState(EMPTY_STATS);
   const [statsLoading, setStatsLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [catLoading, setCatLoading] = useState(false);
 
+  // สรุปยอด + หมวดหมู่ ตามช่วงเวลาที่เลือก (Today / This Month / All Time)
   useEffect(() => {
-    const fetchStats = async () => {
+    const fetchByPeriod = async () => {
       setStatsLoading(true);
+      setCatLoading(true);
+      const range = getPeriodRange(period);
       try {
-        const res = await getSummary(getPeriodRange(period));
-        setStats(res.data.data);
+        const [statsRes, catRes] = await Promise.all([
+          getSummary(range),
+          getCategories(range),
+        ]);
+        setStats(statsRes.data.data);
+        setCategories(catRes.data.data);
       } catch {
         setStats(EMPTY_STATS);
+        setCategories([]);
       } finally {
         setStatsLoading(false);
+        setCatLoading(false);
       }
     };
-    fetchStats();
+    fetchByPeriod();
   }, [period, lastModified]);
 
   const net = stats.netProfit;
@@ -137,6 +150,10 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
         </div>
       </div>
 
+      {/* Dashboard charts */}
+      <TrendChart refreshKey={lastModified} />
+      <CategoryChart data={categories} loading={catLoading} />
+
       {/* Summary shortcut */}
       <button
         onClick={() => onDailyReport(period)}
@@ -180,7 +197,7 @@ export default function HomePage({ onAdd, onNavigate, onDailyReport }) {
           </div>
         ) : (
           <div className="space-y-2">
-            {transactions.slice(0, 5).map((tx) => (
+            {transactions.slice(0, 3).map((tx) => (
               <div key={tx.id} className="flex items-stretch bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden">
                 <div className={`w-1 flex-shrink-0 ${tx.type === "INCOME" ? "bg-green-500" : "bg-red-500"}`} />
                 <div className="flex-1 flex items-center gap-3 px-4 py-3.5 min-w-0">

@@ -13,6 +13,23 @@
     @apply text-slate-900 dark:text-slate-100;
     @apply transition-colors duration-200;
   }
+
+  /* Chart palette — validated for CVD + contrast (light values) */
+  :root {
+    --chart-income: #1baf7a;
+    --chart-expense: #e34948;
+    --chart-bar: #2a78d6;
+    --chart-grid: #e1e0d9;
+    --chart-axis: #898781;
+  }
+  /* Dark steps — same hues re-stepped for the dark surface */
+  .dark {
+    --chart-income: #199e70;
+    --chart-expense: #e66767;
+    --chart-bar: #3987e5;
+    --chart-grid: #2c2c2a;
+    --chart-axis: #898781;
+  }
 }
 
 @media print {
