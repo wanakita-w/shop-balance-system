@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getSummary } from "../services/dailyReportService";
+import { getSummary, getCategories, getReportTransactions } from "../services/dailyReportService";
 import { aiService } from "../services/aiService";
 
 const fmt = (n) => new Intl.NumberFormat("en-US", { minimumFractionDigits: 2 }).format(n ?? 0);
@@ -9,6 +9,21 @@ const fmtDisplay = (localStr) => {
   if (!localStr) return "—";
   const d = new Date(localStr);
   return d.toLocaleString("en-US", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+};
+
+// วันที่แบบสั้นสำหรับรายการแต่ละแถว
+const fmtTxnDate = (s) =>
+  new Date(s).toLocaleString("en-US", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+
+const methodLabel = (m) => (m === "CASH" ? "Cash" : "Transfer");
+
+// หนี HTML injection ตอนสร้างหน้าพิมพ์ (category/note เป็นข้อมูลผู้ใช้)
+const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+// เลขที่เอกสาร (statement number) แบบธนาคาร เช่น STMT-20260706-1629
+const stmtNo = (date) => {
+  const p = (n) => String(n).padStart(2, "0");
+  return `STMT-${date.getFullYear()}${p(date.getMonth() + 1)}${p(date.getDate())}-${p(date.getHours())}${p(date.getMinutes())}`;
 };
 
 const toLocalInput = (date) => {
@@ -57,131 +72,182 @@ const Row = ({ label, value, valueColor, bold, sub }) => (
 
 /* ── Print in new window ─────────────────────────────────── */
 
-function openPrintWindow(result, generatedRange, generatedAt) {
-  const period    = `${fmtDisplay(generatedRange.start)} &mdash; ${fmtDisplay(generatedRange.end)}`;
-  const genDate   = generatedAt.toLocaleString("en-US", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+function openPrintWindow(result, generatedRange, generatedAt, categories = [], transactions = []) {
+  const genDate = generatedAt.toLocaleString("en-US", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const ref = stmtNo(generatedAt);
+
+  // ── Ledger แบบธนาคาร: Debit/Credit + ยอดคงเหลือสะสม ──
+  let running = 0;
+  const ledgerRows = transactions.map((t) => {
+    const isIncome = t.type === "INCOME";
+    running += isIncome ? t.amount : -t.amount;
+    return `<tr>
+      <td class="date">${fmtTxnDate(t.createdAt)}</td>
+      <td>${esc(t.category) || (isIncome ? "Income" : "Expense")}${t.note ? `<div class="l-note">${esc(t.note)}</div>` : ""}<div class="l-method">${methodLabel(t.method)}</div></td>
+      <td class="num">${isIncome ? "" : fmt(t.amount)}</td>
+      <td class="num">${isIncome ? fmt(t.amount) : ""}</td>
+      <td class="num">${amtFmt(running)}</td>
+    </tr>`;
+  }).join("");
+
+  const ledgerSection = transactions.length === 0 ? "" : `
+<div class="sec">Transaction Ledger</div>
+<table class="ledger">
+  <thead>
+    <tr>
+      <th>Date</th><th>Description</th>
+      <th class="num">Debit (−)</th><th class="num">Credit (+)</th><th class="num">Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr class="ob"><td></td><td>Opening Balance</td><td class="num"></td><td class="num"></td><td class="num">฿&nbsp;${fmt(0)}</td></tr>
+    ${ledgerRows}
+    <tr class="cb"><td></td><td>Closing Balance</td><td class="num">${fmt(result.totalExpense)}</td><td class="num">${fmt(result.totalIncome)}</td><td class="num">${amtFmt(result.netProfit)}</td></tr>
+  </tbody>
+</table>`;
+
+  // ── Expense by Category ──
+  const categorySection = categories.length === 0 ? "" : `
+<div class="sec">Expense by Category</div>
+<table class="cat">
+  <thead><tr><th>Category</th><th class="num">Share</th><th class="num">Amount</th></tr></thead>
+  <tbody>
+    ${categories.map((c) => `<tr><td>${esc(c.category)}</td><td class="num">${c.percent}%</td><td class="num">฿&nbsp;${fmt(c.amount)}</td></tr>`).join("")}
+    <tr class="cat-total"><td>Total Expense</td><td class="num"></td><td class="num">฿&nbsp;${fmt(result.totalExpense)}</td></tr>
+  </tbody>
+</table>`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Income &amp; Expense Statement</title>
+<title>${ref} — Statement of Income &amp; Expense</title>
 <style>
-  @page { size: A4 portrait; margin: 2.2cm 2.8cm; }
+  @page { size: A4 portrait; margin: 1.8cm 2cm; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 13px;
+    font-size: 12px;
     color: #111;
     background: #fff;
-    line-height: 1.55;
+    line-height: 1.5;
   }
+  .num { text-align: right; font-family: "Courier New", Courier, monospace; white-space: nowrap; }
 
   /* ── Header ── */
-  .hd { text-align: center; padding-bottom: 18px; border-bottom: 3px double #111; margin-bottom: 20px; }
-  .hd-org   { font-size: 10px; letter-spacing: .28em; font-weight: 700; text-transform: uppercase; color: #555; margin-bottom: 8px; }
-  .hd-title { font-size: 24px; font-weight: 900; letter-spacing: -.3px; margin-bottom: 3px; }
-  .hd-sub   { font-size: 11.5px; color: #555; }
+  .hd { display: flex; justify-content: space-between; align-items: flex-start;
+        border-bottom: 2.5px solid #111; padding-bottom: 12px; margin-bottom: 4px; }
+  .hd-org   { font-size: 16px; font-weight: 900; letter-spacing: .01em; }
+  .hd-org .tag { display: block; font-size: 8px; font-weight: 700; letter-spacing: .22em;
+                 color: #888; text-transform: uppercase; margin-top: 3px; }
+  .hd-right { text-align: right; }
+  .hd-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+  .hd-ccy   { font-size: 9px; color: #777; margin-top: 4px; }
+  .hd-rule  { border: none; border-top: 1px solid #111; margin-bottom: 16px; }
 
-  /* ── Meta ── */
-  .meta { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-  .meta td { padding: 2px 0; font-size: 12px; }
-  .meta .k  { font-weight: 700; width: 90px; color: #444; vertical-align: top; }
-  .meta .v  { color: #111; }
+  /* ── Info box ── */
+  .info-box { border: 1.2px solid #111; margin-bottom: 18px; }
+  .info-box table { width: 100%; border-collapse: collapse; }
+  .info-box td { padding: 5px 12px; font-size: 11px; border-bottom: 1px solid #e2e2e2; }
+  .info-box tr:last-child td { border-bottom: none; }
+  .info-box .k { font-weight: 700; color: #555; width: 20%; text-transform: uppercase;
+                 font-size: 9px; letter-spacing: .05em; }
 
-  /* ── Dividers ── */
-  .dd  { border: none; border-top: 3px double #111; margin: 18px 0; }
-  .ds  { border: none; border-top: 1px solid #111;  margin:  8px 0; }
-  .dsh { border: none; border-top: 1px dashed #bbb; margin: 14px 0; }
+  /* ── Section heading ── */
+  .sec { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+         color: #111; margin: 20px 0 7px; padding-bottom: 4px; border-bottom: 1px solid #111; }
 
-  /* ── Section label ── */
-  .sec { font-size: 10px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: #666; padding-bottom: 5px; }
+  /* ── Account summary box ── */
+  .sum-box { border: 1.2px solid #111; }
+  .sum-box table { width: 100%; border-collapse: collapse; }
+  .sum-box td { padding: 6px 12px; font-size: 12px; }
+  .sum-box .lbl { color: #222; }
+  .sum-box .sub td { font-size: 10px; color: #666; padding: 3px 12px 3px 26px; }
+  .sum-box .div td { padding: 0; }
+  .sum-box .div hr { border: none; border-top: 1px dashed #bbb; }
+  .sum-box .grand td { font-weight: 900; font-size: 14px; border-top: 2px solid #111; background: #f2f2f2; }
 
-  /* ── Line items ── */
-  .tbl { width: 100%; border-collapse: collapse; }
-  .tbl td { padding: 3.5px 0; }
-  .tbl .ind { padding-left: 22px; }
-  .tbl .num { text-align: right; font-family: "Courier New", Courier, monospace; white-space: nowrap; }
-  .tbl .total-row td { font-weight: 700; border-top: 1px solid #111; padding-top: 6px; }
+  /* ── Ledger ── */
+  .ledger { width: 100%; border-collapse: collapse; }
+  .ledger thead th { font-size: 9px; text-transform: uppercase; letter-spacing: .04em;
+        text-align: left; padding: 6px 6px; background: #111; color: #fff; }
+  .ledger thead th.num { text-align: right; }
+  .ledger tbody td { font-size: 10.5px; padding: 5px 6px; border-bottom: 1px solid #ececec; vertical-align: top; }
+  .ledger tbody tr:nth-child(even) { background: #f7f7f7; }
+  .ledger .date { white-space: nowrap; color: #444; }
+  .ledger .l-note { color: #888; font-size: 9px; }
+  .ledger .l-method { color: #aaa; font-size: 8.5px; text-transform: uppercase; letter-spacing: .03em; }
+  .ledger .ob td, .ledger .cb td { font-weight: 700; background: #ececec !important; }
+  .ledger .ob td { border-top: 1.5px solid #111; }
+  .ledger .cb td { border-top: 1.5px solid #111; border-bottom: 1.5px solid #111; }
 
-  /* ── Net summary ── */
-  .net { width: 100%; border-collapse: collapse; }
-  .net td { padding: 4px 0; }
-  .net .hero td { font-size: 18px; font-weight: 900; padding: 8px 0; }
-  .net .num { text-align: right; font-family: "Courier New", Courier, monospace; white-space: nowrap; }
-  .net .s-lbl { padding-left: 22px; font-size: 12px; }
-  .net .s-note { font-size: 10px; color: #777; margin-left: 6px; }
-  .net .sub .num { font-size: 12px; }
+  /* ── Category table ── */
+  .cat { width: 100%; border-collapse: collapse; }
+  .cat thead th { font-size: 9px; text-transform: uppercase; letter-spacing: .04em;
+        text-align: left; padding: 5px 6px; border-bottom: 1.2px solid #111; color: #555; }
+  .cat thead th.num { text-align: right; }
+  .cat tbody td { font-size: 11px; padding: 4px 6px; border-bottom: 1px solid #eee; }
+  .cat .cat-total td { font-weight: 700; border-top: 1.2px solid #111; border-bottom: none; padding-top: 6px; }
 
   /* ── Doc footer ── */
-  .doc-foot {
-    margin-top: 30px;
-    padding-top: 10px;
-    border-top: 1px dashed #ccc;
-    text-align: center;
-    font-size: 9.5px;
-    color: #aaa;
-    letter-spacing: .1em;
-  }
+  .doc-foot { margin-top: 26px; padding-top: 10px; border-top: 1px solid #999;
+              font-size: 8.5px; color: #777; line-height: 1.7; }
+  .doc-foot .strong { font-weight: 700; color: #555; }
 </style>
 </head>
 <body>
 
 <!-- Header -->
 <div class="hd">
-  <div class="hd-title">Income &amp; Expense Statement</div>
-  <div class="hd-sub">Financial Summary Report</div>
+  <div class="hd-org">Shop Balance System<span class="tag">Retail Financial Records</span></div>
+  <div class="hd-right">
+    <div class="hd-title">Statement of Income &amp; Expense</div>
+    <div class="hd-ccy">Currency: Thai Baht (฿ THB)</div>
+  </div>
+</div>
+<hr class="hd-rule">
+
+<!-- Statement info -->
+<div class="info-box">
+  <table>
+    <tr>
+      <td class="k">Statement No.</td><td>${ref}</td>
+      <td class="k">Issue Date</td><td>${genDate}</td>
+    </tr>
+    <tr>
+      <td class="k">Period From</td><td>${fmtDisplay(generatedRange.start)}</td>
+      <td class="k">Period To</td><td>${fmtDisplay(generatedRange.end)}</td>
+    </tr>
+    <tr>
+      <td class="k">Total Entries</td><td>${result.transactionCount} transactions</td>
+      <td class="k">Prepared By</td><td>Shop Balance System</td>
+    </tr>
+  </table>
 </div>
 
-<!-- Meta -->
-<table class="meta">
-  <tr><td class="k">Period</td><td class="v">${period}</td></tr>
-  <tr><td class="k">Generated</td><td class="v">${genDate}</td></tr>
-  <tr><td class="k">Entries</td><td class="v">${result.transactionCount} transactions</td></tr>
-</table>
+<!-- Account Summary -->
+<div class="sec">Account Summary</div>
+<div class="sum-box">
+  <table>
+    <tr><td class="lbl">Total Income (Credit)</td><td class="num">฿&nbsp;${fmt(result.totalIncome)}</td></tr>
+    <tr class="sub"><td>Cash</td><td class="num">฿&nbsp;${fmt(result.cashIncome)}</td></tr>
+    <tr class="sub"><td>Transfer</td><td class="num">฿&nbsp;${fmt(result.transferIncome)}</td></tr>
+    <tr class="div"><td colspan="2"><hr></td></tr>
+    <tr><td class="lbl">Total Expense (Debit)</td><td class="num">฿&nbsp;${fmt(result.totalExpense)}</td></tr>
+    <tr class="sub"><td>Cash</td><td class="num">฿&nbsp;${fmt(result.cashExpense)}</td></tr>
+    <tr class="sub"><td>Transfer</td><td class="num">฿&nbsp;${fmt(result.transferExpense)}</td></tr>
+    <tr class="grand"><td>Net Balance</td><td class="num">${amtFmt(result.netProfit)}</td></tr>
+  </table>
+</div>
 
-<hr class="dd">
-
-<!-- Income -->
-<div class="sec">Income</div>
-<table class="tbl">
-  <tr><td class="ind">Cash</td><td class="num">฿ ${fmt(result.cashIncome)}</td></tr>
-  <tr><td class="ind">Transfer</td><td class="num">฿ ${fmt(result.transferIncome)}</td></tr>
-  <tr class="total-row"><td>Total Income</td><td class="num">฿ ${fmt(result.totalIncome)}</td></tr>
-</table>
-
-<hr class="dsh">
-
-<!-- Expense -->
-<div class="sec">Expense</div>
-<table class="tbl">
-  <tr><td class="ind">Cash</td><td class="num">฿ ${fmt(result.cashExpense)}</td></tr>
-  <tr><td class="ind">Transfer</td><td class="num">฿ ${fmt(result.transferExpense)}</td></tr>
-  <tr class="total-row"><td>Total Expense</td><td class="num">฿ ${fmt(result.totalExpense)}</td></tr>
-</table>
-
-<hr class="dd">
-
-<!-- Net Summary -->
-<div class="sec">Net Summary</div>
-<table class="net">
-  <tr class="hero">
-    <td>Net Profit</td>
-    <td class="num">${amtFmt(result.netProfit)}</td>
-  </tr>
-  <tr><td colspan="2"><hr class="ds" style="margin:4px 0"></td></tr>
-  <tr class="sub">
-    <td class="s-lbl">Net Cash <span class="s-note">(cash in − cash out)</span></td>
-    <td class="num">${amtFmt(result.netCash)}</td>
-  </tr>
-  <tr class="sub">
-    <td class="s-lbl">Net Transfer <span class="s-note">(transfer in − out)</span></td>
-    <td class="num">${amtFmt(result.netTransfer)}</td>
-  </tr>
-</table>
+${ledgerSection}
+${categorySection}
 
 <!-- Footer -->
-<div class="doc-foot">&mdash;&nbsp;END OF REPORT&nbsp;&mdash;&nbsp;Generated by Shop Balance System&nbsp;&mdash;</div>
+<div class="doc-foot">
+  <span class="strong">This is a computer-generated statement and does not require a signature.</span><br>
+  Statement ${ref} · Generated by Shop Balance System on ${genDate}. Figures shown reflect transactions recorded within the stated period. Negative balances are shown in parentheses.
+</div>
 
 <script>
   window.onload = function() {
@@ -216,6 +282,8 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
   const [start, setStart] = useState(init.start);
   const [end, setEnd] = useState(init.end);
   const [result, setResult] = useState(null);
+  const [reportCats, setReportCats] = useState([]);
+  const [reportTxns, setReportTxns] = useState([]);
   const [generatedAt, setGeneratedAt] = useState(null);
   const [generatedRange, setGeneratedRange] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -237,6 +305,24 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
     setAiError("");
   };
 
+  // ดึงข้อมูลรายงานครบชุด: ยอดสรุป + หมวดหมู่ + รายการทั้งหมด
+  const fetchReport = async (startLocal, endLocal) => {
+    const range = {
+      start: new Date(startLocal).toISOString(),
+      end: new Date(endLocal).toISOString(),
+    };
+    const [sumRes, catRes, txRes] = await Promise.all([
+      getSummary(range),
+      getCategories(range),
+      getReportTransactions(range),
+    ]);
+    return {
+      summary: sumRes.data.data,
+      categories: catRes.data.data,
+      transactions: txRes.data.data,
+    };
+  };
+
   const handleGenerate = async () => {
     setLoading(true);
     setError("");
@@ -244,11 +330,10 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
     setAiAnalysis(null);
     setAiError("");
     try {
-      const res = await getSummary({
-        start: new Date(start).toISOString(),
-        end: new Date(end).toISOString(),
-      });
-      setResult(res.data.data);
+      const { summary, categories, transactions } = await fetchReport(start, end);
+      setResult(summary);
+      setReportCats(categories);
+      setReportTxns(transactions);
       setGeneratedAt(new Date());
       setGeneratedRange({ start, end });
     } catch {
@@ -278,13 +363,12 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
 
   useEffect(() => {
     let cancelled = false;
-    getSummary({
-      start: new Date(init.start).toISOString(),
-      end: new Date(init.end).toISOString(),
-    })
-      .then((res) => {
+    fetchReport(init.start, init.end)
+      .then(({ summary, categories, transactions }) => {
         if (!cancelled) {
-          setResult(res.data.data);
+          setResult(summary);
+          setReportCats(categories);
+          setReportTxns(transactions);
           setGeneratedAt(new Date());
           setGeneratedRange({ start: init.start, end: init.end });
         }
@@ -364,9 +448,13 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
         <>
           <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
             <div className="px-5 pt-5 pb-4 border-b-2 border-gray-900 dark:border-gray-200">
-              <p className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Financial Report</p>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Income &amp; Expense Statement</h2>
+              <p className="text-[10px] font-bold tracking-[0.2em] text-gray-400 uppercase mb-1">Statement of Income &amp; Expense</p>
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white">Shop Balance System</h2>
               <div className="mt-2 space-y-0.5">
+                <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="font-medium w-14 flex-shrink-0">Stmt No.</span>
+                  <span className="font-mono">{stmtNo(generatedAt)}</span>
+                </div>
                 <div className="flex gap-2 text-xs text-gray-500 dark:text-gray-400">
                   <span className="font-medium w-14 flex-shrink-0">Period</span>
                   <span>
@@ -415,6 +503,20 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
                 value={`${result.netTransfer >= 0 ? "" : "−"}฿ ${fmt(Math.abs(result.netTransfer))}`}
                 valueColor={result.netTransfer >= 0 ? "text-gray-700 dark:text-gray-200" : "text-red-500"}
               />
+
+              {reportCats.length > 0 && (
+                <>
+                  <Line dashed />
+                  <p className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase pt-1 pb-0.5">Expense by Category</p>
+                  {reportCats.map((c) => (
+                    <Row key={c.category} sub
+                      label={`${c.category}  (${c.percent}%)`}
+                      value={`฿ ${fmt(c.amount)}`}
+                      valueColor="text-red-500 dark:text-red-400"
+                    />
+                  ))}
+                </>
+              )}
             </div>
 
             <div className="px-5 py-3 border-t border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-between">
@@ -425,10 +527,46 @@ export default function DailyReportPage({ onBack, initialPeriod }) {
             </div>
           </div>
 
+          {/* Transaction Details */}
+          {reportTxns.length > 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-5">
+              <p className="text-[10px] font-bold tracking-[0.15em] text-gray-400 uppercase mb-3">
+                Transaction Details
+              </p>
+              <div className="space-y-2">
+                {reportTxns.map((t, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-3 text-xs border-b border-dashed border-gray-100 dark:border-gray-700/50 pb-2 last:border-0 last:pb-0"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-700 dark:text-gray-200 truncate">
+                        {t.category || (t.type === "INCOME" ? "Income" : "Expense")}
+                      </p>
+                      <p className="text-gray-400 text-[11px]">
+                        {fmtTxnDate(t.createdAt)} · {methodLabel(t.method)}
+                        {t.note ? ` · ${t.note}` : ""}
+                      </p>
+                    </div>
+                    <span
+                      className={`font-mono tabular-nums font-semibold flex-shrink-0 ${
+                        t.type === "INCOME"
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-500 dark:text-red-400"
+                      }`}
+                    >
+                      {t.type === "INCOME" ? "+" : "−"}฿ {fmt(t.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Print button */}
           <div className="space-y-1.5">
             <button
-              onClick={() => openPrintWindow(result, generatedRange, generatedAt)}
+              onClick={() => openPrintWindow(result, generatedRange, generatedAt, reportCats, reportTxns)}
               className="w-full flex items-center justify-center gap-2 py-3 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-sm font-semibold rounded-xl active:scale-[0.98] transition-all"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">

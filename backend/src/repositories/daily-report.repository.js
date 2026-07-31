@@ -55,3 +55,20 @@ export const getTransactionsInRange = async (start, end) => {
     orderBy: { createdAt: "asc" },
   });
 };
+
+// ดึงรายการแบบเต็ม (พร้อมหมวด/วิธี/โน้ต) สำหรับแสดง "รายการทั้งหมด" ในรายงาน
+export const getTransactionList = async (start, end) => {
+  const where = buildWhere(start, end);
+  return prisma.transaction.findMany({
+    where,
+    orderBy: { createdAt: "asc" },
+    select: {
+      createdAt: true,
+      type: true,
+      amount: true,
+      method: true,
+      category: true,
+      note: true,
+    },
+  });
+};

@@ -3,6 +3,7 @@ import {
   getCategoryBreakdown,
   getTopExpenses,
   getTransactionsInRange,
+  getTransactionList,
 } from "../repositories/daily-report.repository.js";
 
 // แปลงเวลาเป็น "วันที่" ตามเขตเวลาไทย รูปแบบ YYYY-MM-DD (en-CA ให้รูปแบบ ISO)
@@ -70,6 +71,11 @@ export const getEnrichedSummary = async ({ start, end } = {}) => {
   }));
 
   return { current, previous, categories, topExpenses };
+};
+
+// รายการทั้งหมดในช่วงเวลา — ใช้แสดงส่วน "Transaction Details" ในรายงาน
+export const getReportTransactions = async ({ start, end } = {}) => {
+  return getTransactionList(start, end);
 };
 
 // รายจ่ายแยกตามหมวด พร้อม % ของยอดรวม — ใช้กับกราฟ bar หน้า dashboard
