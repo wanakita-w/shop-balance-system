@@ -16,3 +16,6 @@ export const getTrend = ({ start, end, unit } = {}) => {
 };
 
 export const getCategories = (range = {}) => api.get(`/stats/categories?${buildParams(range)}`);
+
+export const getReportTransactions = (range = {}) =>
+  api.get(`/stats/transactions?${buildParams(range)}`);

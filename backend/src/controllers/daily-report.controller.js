@@ -2,6 +2,7 @@ import {
   getSummary,
   getTrend,
   getCategories,
+  getReportTransactions,
 } from "../services/daily-report.service.js";
 import { ERROR_MESSAGES } from "../utils/errorMessages.js";
 
@@ -28,6 +29,22 @@ export const getTrendStats = async (req, res) => {
     res.json({ success: true, data });
   } catch (error) {
     console.error("Trend Error:", error);
+    res.status(500).json({
+      success: false,
+      message: ERROR_MESSAGES.INTERNAL_ERROR,
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
+// รายการทั้งหมดในช่วงเวลา (สำหรับส่วน Transaction Details ในรายงาน)
+export const getTransactionListStats = async (req, res) => {
+  try {
+    const { start, end } = req.query;
+    const data = await getReportTransactions({ start, end });
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error("Transaction List Error:", error);
     res.status(500).json({
       success: false,
       message: ERROR_MESSAGES.INTERNAL_ERROR,
